@@ -125,7 +125,7 @@ body.mob #inv{top:70px;right:80px}
 <div class="scr" id="win"><h1 style="color:#c9bdae">OUT</h1><p>The padlock falls open and the gate swings wide. Behind you, the house is silent. For now.</p><p class="row" id="wst"></p><div><button id="bWinCred">Credits</button><button id="bAgain">Play again</button></div></div>
 <div class="scr" id="load"><div class="eyebrow">VOSS MANSION &middot; 1893</div><h2 style="color:#8a1c1c">Opening the doors&hellip;</h2><div class="lb"><i></i></div><p id="loadt"></p></div>
 <div class="scr" id="cred"><div id="credFace"></div><div id="credFog"></div><i class="drip" style="left:9%;animation-delay:.6s"></i><i class="drip" style="left:23%;animation-delay:3.1s"></i><i class="drip" style="left:47%;animation-delay:1.7s"></i><i class="drip" style="left:68%;animation-delay:4.4s"></i><i class="drip" style="left:86%;animation-delay:2.3s"></i>
-<div id="credBox"><h2 id="credT"><span class="a">SPECIAL SHOUT-OUT TO </span><span id="credNm">master_yt069(Mehdi)</span><span class="c"> — PLANNER OF THE GAME</span></h2><p class="cr-sub">The house remembers everyone who came to plan its rooms.</p><button id="bCredBack">Back</button></div></div>
+<div id="credBox"><h2 id="credT"><span class="a">SPECIAL SHOUT-OUT TO </span><span id="credNm">master_yt069</span><span class="c"> — PLANNER OF THE GAME</span></h2><p class="cr-sub">The house remembers everyone who came to plan its rooms.</p><button id="bCredBack">Back</button></div></div>
 <div id="mctl"><div id="tzL"><div id="joy"><div id="knob"></div></div></div><div id="tzR"></div>
 <button class="mb" id="bFire">FIRE</button><button class="mb" id="bUse">USE</button><button class="mb sm" id="bRel">RELOAD</button><button class="mb sm" id="bFl">LIGHT</button>
 <button class="mb sm" id="bPz">PAUSE</button><button class="mb sm" id="bSp">RUN</button><button class="mb sm" id="bCr">SNEAK</button><button class="mb sm" id="bIv">ITEMS</button><button class="mb sm" id="bSw">SWAP</button><button class="mb" id="bBr">HOLD<br>BREATH</button></div>
@@ -476,7 +476,9 @@ const pl=(w,d,m,x,y,z,up)=>{const g=new T.PlaneGeometry(w,d),u=g.attributes.uv;f
 const skirt=(ax,f,s,e)=>{const Ln=e-s;for(const sd of[-1,1]){const o=sd*.17,me=new T.Mesh(ax==='x'?new T.BoxGeometry(Ln,.16,.05):new T.BoxGeometry(.05,.16,Ln),MFR);ax==='x'?me.position.set((s+e)/2,.08,f+o):me.position.set(f+o,.08,(s+e)/2);me.receiveShadow=true;W.add(me)}};
 function dframe(ax,f,g0,g1){const p=(w,h,d,x,y,z)=>{const me=new T.Mesh(new T.BoxGeometry(w,h,d),MFR);me.position.set(x,y,z);me.castShadow=true;W.add(me)};
 if(ax==='z'){p(.4,2.5,.07,f,1.25,g0-.04);p(.4,2.5,.07,f,1.25,g1+.04);p(.4,.09,g1-g0+.16,f,2.547,(g0+g1)/2)}else{p(.07,2.5,.4,g0-.04,1.25,f);p(.07,2.5,.4,g1+.04,1.25,f);p(g1-g0+.16,.09,.4,(g0+g1)/2,2.547,f)}}
-function wall(ax,f,a,b,gaps,h,m){h=h||3.2;m=m||MWL;const fin=m===MWL;let s=a;(gaps||[]).concat([[b,b]]).forEach(([g0,g1])=>{if(g0>s+.01){ax==='x'?bx(g0-s,h,.3,m,(s+g0)/2,h/2,f,'w'):bx(.3,h,g0-s,m,f,h/2,(s+g0)/2,'w');if(fin)skirt(ax,f,s,g0)}
+const WINS=[['x',-1,-8,-7.5],['x',-1,-8,-4.5],['x',-1,-8,4.5],['x',-1,-8,7.5],['z',-1,-10,-5],['z',-1,-10,-2.2],['z',-1,-14,11],['z',1,12,-5],['z',1,12,0],['z',1,10,13.5],['x',1,14,4.5],['x',1,14,7.5],['x',1,22,0],['z',-1,-2,19],['z',1,2,18.5]];
+const wsplit=(ax,f,s,e)=>{const o=[];let u=s;WINS.filter(w=>w[0]===ax&&w[2]===f&&w[3]-.5>s-.001&&w[3]+.5<e+.001).sort((a,b)=>a[3]-b[3]).forEach(w=>{if(w[3]-.5>u+.005)o.push([u,w[3]-.5,1]);o.push([w[3]-.5,w[3]+.5,0]);u=w[3]+.5});if(e>u+.005)o.push([u,e,1]);return o};
+function wall(ax,f,a,b,gaps,h,m){h=h||3.2;m=m||MWL;const fin=m===MWL;let s=a;(gaps||[]).concat([[b,b]]).forEach(([g0,g1])=>{if(g0>s+.01){(fin&&h===3.2?wsplit(ax,f,s,g0):[[s,g0,1]]).forEach(([u0,u1,fl])=>{const pc=(y0,y1,t)=>{const hh=y1-y0,c=(u0+u1)/2;ax==='x'?bx(u1-u0,hh,.3,m,c,y0+hh/2,f,t):bx(.3,hh,u1-u0,m,f,y0+hh/2,c,t)};if(fl)pc(0,h,'w');else{pc(0,1.2,'w');pc(2.6,h)}});if(fin)skirt(ax,f,s,g0)}
 if(g1>g0){ax==='x'?bx(g1-g0,h-2.5,.3,m,(g0+g1)/2,(h+2.5)/2,f):bx(.3,h-2.5,g1-g0,m,f,(h+2.5)/2,(g0+g1)/2);if(fin)dframe(ax,f,g0,g1)}s=g1})}
 /* real ladder: wooden rails, round rungs, bolt heads, wall brackets */
 function ladder(x,z,y0,y1,wd){const g=new T.Group(),wm=new T.MeshStandardMaterial({map:TX.floor,color:0x9a7c58,roughness:.9,bumpMap:TX.floor,bumpScale:.8}),mm=new T.MeshStandardMaterial({color:0x3a3a3d,metalness:.8,roughness:.45,envMap:envT}),h=y1-y0;
@@ -557,8 +559,6 @@ for(const y of [.7,1.3,1.9]){const c=bx(1.5,.07,.05,MW,0,y,-7.75);c.material=new
 /* lights */
 lamp(0,2.9,-4,0xffc080,1.1,1);lamp(0,2.9,6,0xffb070,1,0,12);lamp(-6,2.8,-3,0xffb070,.9,1);lamp(7,2.8,-2.5,0xffb878,1);lamp(-6,2.8,9,0xffc080,.9,1);lamp(6,2.8,8.5,0xffc080,.8,1);lamp(-12.5,1.2,11,0xff6a30,.8,1,8,'table');
 lamp(60,2.4,4,0xb0c0ff,.9,1,9);lamp(60,2.4,14,0xb0c0ff,.8,1,9);lamp(54,2.4,7,0xb0c0ff,.9,1,9);lamp(67,1.4,10,0xff2010,1.4,1,10,'hang');lamp(0,2.9,16,0x8090c0,.6,1,9);
-/* boarded windows with moonlight */
-const mm=new T.MeshBasicMaterial({color:0x1a2848});[[-9.82,1.9,-5,'z'],[11.82,1.9,-5,'z'],[-9.82,1.9,-0,'z'],[11.82,1.9,0,'z']].forEach(([x,y,z])=>{const f=bx(.08,1.4,1.2,MW,x,y,z);bx(.04,1.2,1,mm,x+(x<0?.04:-.04),y,z).castShadow=false;for(let i=0;i<3;i++){const p=bx(.1,.12,1.4,MW,x+(x<0?.06:-.06),y-.45+i*.45,z);p.rotation.x=R()*.2-.1}});
 /* furniture helper */
 const F=(w,h,d,x,z,y)=>bx(w,h,d,MW,x,y===undefined?h/2:y,z,'f');
 /* real furniture */
@@ -710,7 +710,7 @@ const LOOSE_DEF=[
 {zone:'yb',x:-12,y:.95,z:35.08},{zone:'ye',x:19.5,y:.06,z:8.4},{zone:'sd',x:19.4,y:.95,z:42.45},{zone:'gd',x:-27.2,y:.12,z:6}];
 const REL_DEF=[{x:-8.9,y:.68,z:-6.5},{x:10.9,y:.06,z:-7.3},{x:1.5,y:.06,z:-5.2},{x:-9.1,y:.06,z:7},{x:9,y:.06,z:12.6},{x:-13.6,y:.06,z:8.8},{x:60.8,y:.06,z:.8},{x:3,y:.1,z:-9.7},{x:13,y:.1,z:20.2},{x:-3,y:.1,z:34.5},{x:-26,y:.14,z:13.2},{x:20,y:.06,z:40},{x:8,y:.1,z:-21}];
 const RELIC=[{k:'locket',n:"Eleanor's Locket",t:'Two portraits inside. One face is scratched out.'},{k:'photo',n:'Voss Family Photograph',t:'Seven people. Only one is smiling.'},{k:'ring',n:'Wedding Ring',t:'Too small for any living finger.'},{k:'music',n:'Music Box',t:'It plays a wedding march, then stops on its own.'},{k:'veil',n:'Veil Fragment',t:'Brittle lace stitched with a name: Eleanor.'}];
-let SP={},CRT=[],BAR=[],RELS=[],DBACK=null,GATE=null,SC=null,OUTK=0,ambT=6,PLK=null,NAILM=null,NAILGX=null,NAILGZ=null,CMAT=null;
+let SP={},CRT=[],BAR=[],RELS=[],DBACK=null,GATE=null,SC=null,OUTK=0,WK=0,SL=0,ambT=6,PLK=null,NAILM=null,NAILGX=null,NAILGZ=null,CMAT=null;
 const ITM={
 flash:{lab:'Take the flashlight',mesh:()=>mb(.045,.045,.2,0x333333),get(){fl.own=true;A.pick();msg('Flashlight acquired. Press F.')}},
 brass:{lab:'Take the Brass Key',mesh:()=>mkKey(0xd4a437),get(){give('brass');obj('Try the doors along the hall (Door 3 is locked).');G.ev.brass=1;setTimeout(()=>{if(G.st==='play'){gh.st==='dormant'&&(gh.st='wander',spawnFar());scare('corridor')}},9000)}},
@@ -820,11 +820,16 @@ for(const z of[z0,z1]){const g=new T.BufferGeometry();g.setAttribute('position',
 bx(1.2,3.6,1.2,MY.stone,6,5.2,4);/* ===== exterior: cladding, windows, porch, trim, back stoop ===== */
 const SDm=mat(TX.siding,0xd0d4c8),TRM=new T.MeshStandardMaterial({color:0x6a6558,roughness:.85}),GD=new T.MeshBasicMaterial({color:0x0a1022}),GW=new T.MeshBasicMaterial({color:0x6a4818}),SHm=mat(TX.cwood,0x2c3a30),IVm=new T.MeshStandardMaterial({map:TX.leaf,color:0x9ab08a,roughness:1,side:T.DoubleSide});
 const E=(ax,dr,f,p,u,y,v,w,h,d,m)=>ax==='x'?bx(w,h,d,m,p+u,y,f+dr*v):bx(d,h,w,m,f+dr*v,y,p+u);
-[['x',-8,-1,-10,12,[[-.8,.8]]],['z',-10,-1,-8,8,[]],['z',-10,-1,14,16,[]],['z',-14,-1,8,14,[]],['x',8,-1,-14,-10,[]],['x',14,1,-14,-10,[]],['x',16,1,-10,-2,[]],['z',-2,-1,16,22,[]],['x',22,1,-2,2,[]],['z',2,1,14,22,[]],['x',14,1,2,10,[]],['z',10,1,3,14,[[11.35,12.85]]],['x',3,1,10,12,[]],['z',12,1,-8,3,[]]].forEach(([ax,f,dr,a,b,gp])=>{let s=a;gp.concat([[b,b]]).forEach(([g0,g1])=>{if(g0>s+.01){const L=g0-s+.3,c=(s+g0)/2;if(ax==='x'){bx(L,.55,.1,MY.stone,c,.275,f+dr*.2);bx(L,2.7,.06,SDm,c,1.85,f+dr*.18)}else{bx(.1,.55,L,MY.stone,f+dr*.2,.275,c);bx(.06,2.7,L,SDm,f+dr*.18,1.85,c)}}s=g1});
+[['x',-8,-1,-10,12,[[-.8,.8]]],['z',-10,-1,-8,8,[]],['z',-10,-1,14,16,[]],['z',-14,-1,8,14,[]],['x',8,-1,-14,-10,[]],['x',14,1,-14,-10,[]],['x',16,1,-10,-2,[]],['z',-2,-1,16,22,[]],['x',22,1,-2,2,[]],['z',2,1,14,22,[]],['x',14,1,2,10,[]],['z',10,1,3,14,[[11.35,12.85]]],['x',3,1,10,12,[]],['z',12,1,-8,3,[]]].forEach(([ax,f,dr,a,b,gp])=>{let s=a;gp.concat([[b,b]]).forEach(([g0,g1])=>{if(g0>s+.01){const L=g0-s+.3,c=(s+g0)/2;if(ax==='x')bx(L,.55,.1,MY.stone,c,.275,f+dr*.2);else bx(.1,.55,L,MY.stone,f+dr*.2,.275,c);wsplit(ax,f,s,g0).forEach(([u0,u1,fl])=>{if(u0===s)u0-=.15;if(u1===g0)u1+=.15;const cp=(y0,y1)=>{const hh=y1-y0,cc=(u0+u1)/2,l2=u1-u0;ax==='x'?bx(l2,hh,.06,SDm,cc,y0+hh/2,f+dr*.18):bx(.06,hh,l2,SDm,f+dr*.18,y0+hh/2,cc)};if(fl)cp(.5,3.2);else{cp(.5,1.2);cp(2.6,3.2)}})}s=g1});
 [a-.1,b+.1].forEach(e=>ax==='x'?bx(.16,3.2,.16,TRM,e,1.6,f+dr*.2):bx(.16,3.2,.16,TRM,f+dr*.2,1.6,e))});
-const win=(ax,dr,f,p,warm)=>{const y=1.9;E(ax,dr,f,p,0,y,.215,1,1.4,.02,warm?GW:GD).castShadow=false;E(ax,dr,f,p,0,y+.75,.24,1.3,.1,.1,TRM);E(ax,dr,f,p,0,y-.75,.24,1.3,.1,.1,TRM);[-.6,.6].forEach(u=>E(ax,dr,f,p,u,y,.24,.1,1.5,.1,TRM));E(ax,dr,f,p,0,y,.23,.04,1.4,.05,TRM);E(ax,dr,f,p,0,y,.23,1.1,.04,.05,TRM);E(ax,dr,f,p,0,y-.82,.3,1.6,.08,.24,MY.stone);E(ax,dr,f,p,0,y+.86,.26,1.6,.12,.16,MY.stone);
-[-1,1].forEach(s=>{if(R()<.2)return;E(ax,dr,f,p,s*.85,y,.24,.5,1.5,.04,SHm);E(ax,dr,f,p,s*.85,y+.3,.27,.5,.07,.03,TRM);E(ax,dr,f,p,s*.85,y-.3,.27,.5,.07,.03,TRM)})};
-[['x',-1,-8,-7.5,0],['x',-1,-8,-4.5,1],['x',-1,-8,4.5,0],['x',-1,-8,7.5,1],['z',-1,-10,-5,0],['z',-1,-10,0,1],['z',-1,-10,5.5,0],['z',-1,-14,11,0],['x',1,16,-7.5,0],['x',1,16,-4.5,0],['x',1,14,4.5,0],['x',1,14,7.5,1],['z',1,12,-5,0],['z',1,12,0,0],['z',1,10,6,0],['z',1,10,8.5,1],['x',1,22,0,0],['z',-1,-2,19,0],['z',1,2,18.5,0]].forEach(a=>win(...a));
+const GL_=new T.MeshStandardMaterial({color:0x9fb4d0,transparent:true,opacity:.16,roughness:.05,metalness:.6,envMap:envT,envMapIntensity:.9,depthWrite:false}),CUR=new T.MeshStandardMaterial({color:0x4a1a1c,roughness:1,side:T.DoubleSide});
+const win=(ax,dr,f,p,i)=>{const y=1.9;{const g=E(ax,dr,f,p,0,y,0,1,1.4,.04,GL_);g.castShadow=g.receiveShadow=false}
+E(ax,dr,f,p,0,y+.75,.24,1.3,.1,.1,TRM);E(ax,dr,f,p,0,y-.75,.24,1.3,.1,.1,TRM);[-.6,.6].forEach(u=>E(ax,dr,f,p,u,y,.24,.1,1.5,.1,TRM));E(ax,dr,f,p,0,y,.23,.04,1.4,.05,TRM);E(ax,dr,f,p,0,y,.23,1.1,.04,.05,TRM);E(ax,dr,f,p,0,y-.82,.3,1.6,.08,.24,MY.stone);E(ax,dr,f,p,0,y+.86,.26,1.6,.12,.16,MY.stone);
+[-1,1].forEach(s=>{if(R()<.2)return;E(ax,dr,f,p,s*.85,y,.24,.5,1.5,.04,SHm);E(ax,dr,f,p,s*.85,y+.3,.27,.5,.07,.03,TRM);E(ax,dr,f,p,s*.85,y-.3,.27,.5,.07,.03,TRM)});
+E(ax,dr,f,p,0,y+.73,-.19,1.3,.1,.08,MY.wood);[-.6,.6].forEach(u=>E(ax,dr,f,p,u,y,-.19,.1,1.4,.08,MY.wood));E(ax,dr,f,p,0,1.18,-.22,1.4,.05,.24,MY.wood);
+if(i%3!==1)[-1,1].forEach(s=>E(ax,dr,f,p,s*.62,y+.05,-.21,.34,1.55,.03,CUR));
+if(i%4===0)[.18,-.22].forEach((o,k)=>{const m=E(ax,dr,f,p,0,y+o,-.24,1.5,.12,.04,MY.wood);if(ax==='x')m.rotation.z=k?-.16:.14;else m.rotation.x=k?.16:-.14})};
+WINS.forEach((a,i)=>win(a[0],a[1],a[2],a[3],i));
 /* door frames */
 [['x',-1,-8,0,.88,.7],['z',1,10,12.1,.82,.7]].forEach(([ax,dr,f,p,o])=>{[-1,1].forEach(s=>E(ax,dr,f,p,s*o,1.3,.24,.2,2.6,.16,TRM));E(ax,dr,f,p,0,2.65,.26,o*2.4,.22,.2,TRM);E(ax,dr,f,p,0,2.82,.3,o*2.8,.08,.3,MY.stone)});
 /* porch: floor, bases, capitals, rails, gabled roof, lantern */
@@ -927,10 +932,13 @@ CRT.forEach(c=>crateBuild(c));['flash','brass','silver','hammer','fuse','rusty',
 /* back door of the storage room, boarded from inside */
 mkBarricade({ax:'z',cx:9.78,cz:12.1,len:1.9,nvx:-1,nvz:0,col:[9.5,11.25,9.95,12.95],onBreak(){G.yard=true;DBACK.locked=false;DBACK.key=null;DBACK.sw(true);obj('Cold air floods in. Search the grounds for the Gate Key and anything useful.');msg('The boards splinter. The back door creaks open.');if(gh.st==='dormant'){gh.st='wander';spawnFar()}}})}
 /* ---------- per-frame: sky, fog, crates, hammer, gate, scarecrow, ambience, checklist ---------- */
-function yardUpd(dt){const out=P.lvl===0&&!inHouse(P.x,P.z);OUTK=lp(OUTK,out?1:0,Math.min(1,dt*(out?1.5:3)));const k=OUTK;
-scene.fog.density=lp(.085,.05,k);scene.fog.color.copy(FOGC0).lerp(FOGC1,k);scene.background.copy(scene.fog.color);AMB.intensity=lp(.45,.85,k);MOON.intensity=k*.55;SKY.visible=k>.02;SKY.position.copy(cam.position);A.setOut(k);
+let HANDS=null;function mkHands(){HANDS=new T.Group();const sk=new T.MeshStandardMaterial({color:0xb59a88,roughness:.8,depthTest:false}),sl=new T.MeshStandardMaterial({color:0x2a2a2e,roughness:.95,depthTest:false});for(let i=0;i<2;i++){const h=new T.Group(),a=new T.Mesh(new T.CylinderGeometry(.04,.052,.5,10),sl);a.rotation.x=PI/2;a.position.z=.28;h.add(a);const p=new T.Mesh(new T.SphereGeometry(.06,10,8),sk);p.scale.set(1,.5,1.35);h.add(p);for(let k=0;k<4;k++){const f=new T.Mesh(new T.CylinderGeometry(.011,.009,.075,6),sk);f.rotation.x=PI/2;f.position.set(k*.022-.033,0,-.095);h.add(f)}const th=new T.Mesh(new T.CylinderGeometry(.012,.01,.06,6),sk);th.rotation.set(PI/2,0,i?.7:-.7);th.position.set(i?-.055:.055,0,-.04);h.add(th);h.traverse(o=>{o.renderOrder=999});HANDS.add(h)}cam.add(HANDS);HANDS.visible=false}
+function yardUpd(dt){const out=P.lvl===0&&!inHouse(P.x,P.z);OUTK=lp(OUTK,out?1:0,Math.min(1,dt*(out?1.5:3)));const k=OUTK;let wt=0;if(!out&&P.lvl===0){const fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw);for(const w of WINS){const wx=w[0]==='x'?w[3]:w[2],wz=w[0]==='x'?w[2]:w[3],dx=wx-P.x,dz=wz-P.z,d=Math.hypot(dx,dz),ox=w[0]==='z'?w[1]:0,oz=w[0]==='x'?w[1]:0;if(d<8&&(dx*fx+dz*fz)>d*.5&&(fx*ox+fz*oz)>.3)wt=Math.max(wt,1-d/8)}}WK=lp(WK,wt,Math.min(1,dt*3));const kv=Math.max(k,WK*.75);
+scene.fog.density=lp(.085,.05,kv);scene.fog.color.copy(FOGC0).lerp(FOGC1,kv);scene.background.copy(scene.fog.color);AMB.intensity=lp(.45,.85,k)+WK*.15;MOON.intensity=k*.55+WK*.2;SKY.visible=kv>.02;SKY.position.copy(cam.position);A.setOut(k);
 for(const c of CRT)if(c.open&&c.lid)c.lid.rotation.x=lp(c.lid.rotation.x,-1.95,Math.min(1,dt*7));
-if(P.sr>0){P.sr-=dt;P.pitch=lp(P.pitch,.5,Math.min(1,dt*3));const c=P.sc;if(c&&c.g)c.g.rotation.z=Math.sin(performance.now()/40)*.01;if(P.sr<=0){P.sr=0;if(c&&c.g)c.g.rotation.z=0;crateFind(c)}}
+{const c=P.sc;if(P.sr>0){P.sr-=dt;const tt=1.35-P.sr;P.yaw=la(P.yaw,Math.atan2(-(c.x-P.x),-(c.z-P.z)),Math.min(1,dt*5));P.pitch=lp(P.pitch,-.72-Math.sin(tt*9)*.04,Math.min(1,dt*6));if(c.g)c.g.rotation.z=Math.sin(performance.now()/35)*.012;P.sn=(P.sn||0)-dt;if(P.sn<=0){P.sn=.28;A.n(.1,2600,700,.3,'bandpass',null,2)}if(P.sr<=0){P.sr=0;P.sb=.5;if(c.g)c.g.rotation.z=0;crateFind(c)}}
+SL=lp(SL,P.sr>0?1:0,Math.min(1,dt*(P.sr>0?5:4)));if(P.sb>0){P.sb-=dt;P.pitch=lp(P.pitch,-.05,Math.min(1,dt*4))}
+if(SL>.01){if(!HANDS)mkHands();HANDS.visible=true;const t=performance.now()/1000;HANDS.children.forEach((h,i)=>{const ph=t*9+i*PI,dip=Math.max(0,Math.sin(ph));h.position.set((i?.17:-.17)+Math.sin(ph*.5)*.03,-.36+SL*.04-dip*.12*SL,-.5-dip*.05*SL);h.rotation.set(-.5-dip*.25*SL,i?-.2:.2,i?-.12:.12)});gun.visible=false;HAM.visible=false}else if(HANDS&&HANDS.visible){HANDS.visible=false;if(held)setHeld(held)}}
 hamUpd(dt);frgUpd(dt);barFall(dt);
 if(GATE&&G.gateOpen){GATE.a=lp(GATE.a,1,Math.min(1,dt*1.6));GATE.l.rotation.y=-1.55*GATE.a;GATE.r.rotation.y=1.55*GATE.a}
 if(SC&&P.lvl===0){const d=Math.hypot(P.x-SC.x,P.z-SC.z);if(d<22){const tg=cl(la(0,Math.atan2(P.x-SC.x,P.z-SC.z)-SC.ry,1),-1.3,1.3);SC.head.rotation.y=lp(SC.head.rotation.y,tg,Math.min(1,dt*.8));SC.head.rotation.z=Math.sin(performance.now()/1300)*.08}}
@@ -1212,7 +1220,7 @@ hbT-=dt;if(tn>.3&&hbT<=0){A.heart();hbT=lp(1.2,.45,tn)}
 /* ghost audio */
 if(gh.vis&&gh.lvl===P.lvl&&gh.st!=='gone'&&gh.st!=='dormant'&&!dying){A.pos(gh.x,1.3,gh.z);gsT-=dt;if(gh.mvg&&gsT<=0){A.gstep();gsT=gh.spd>2.5?.4:.85}gbT-=dt;if(gbT<=0){A.breath();gbT=3+R()*3}gwT-=dt;if(gwT<=0){A.whisper();gwT=8+R()*8}}
 /* camera */
-shake=Math.max(0,shake-dt*.9);const sh=shake*(shake>.01?1:0);cam.position.set(P.x+rnd()*sh*.12,P.y+rnd()*sh*.12,P.z+rnd()*sh*.12);cam.rotation.set(P.pitch+rnd()*sh*.06+(dying?.0:0),P.yaw+rnd()*sh*.06,(dying?.25:0)+rnd()*sh*.05);
+shake=Math.max(0,shake-dt*.9);const sh=shake*(shake>.01?1:0);cam.position.set(P.x+rnd()*sh*.12-Math.sin(P.yaw)*.2*SL,P.y+rnd()*sh*.12-.2*SL+Math.sin(performance.now()/110)*.012*SL,P.z+rnd()*sh*.12-Math.cos(P.yaw)*.2*SL);cam.rotation.set(P.pitch+rnd()*sh*.06+(dying?.0:0),P.yaw+rnd()*sh*.06,(dying?.25:0)+rnd()*sh*.05+Math.sin(performance.now()/160)*.035*SL);
 cam.fov=lp(cam.fov,70+tn*7+(gh.st==='stare'?-6:0)+(JS.on?(JS.t<.3?24:14):0),JS.on?.35:.1);cam.updateProjectionMatrix();A.lis(cam);
 /* weapon */
 P.rc=Math.max(0,P.rc-dt*7);gunUpd(dt);casUpd(dt);
