@@ -604,9 +604,13 @@ for(const sd of[-1,1]){const pq=new T.Mesh(new T.PlaneGeometry(.17,.17),pm),o=sd
 const kn=new T.Mesh(new T.SphereGeometry(.032,10,8),km),o2=sd*(th/2+.045);if(hz)kn.position.set(o2,1.05,w-.14);else kn.position.set(w-.14,1.05,o2);g.add(kn)}}
 sw(o){this.open=o;this.cl.on=!o;A.doorSnd(o,this.x,this.z)}upd(dt){this.a=lp(this.a,this.open?1.55:0,Math.min(1,dt*3));this.g.rotation.y=this.a*this.s}}
 Door.n=0;Door.tex={};Door.km=null;
-const N=[[0,-6],[0,-2],[0,3],[0,9],[0,15],[0,19.2],[-6,-2],[-6,-6],[7,-2],[5,-6],[-6,9],[-6,13],[6,8],[6,12],[60,2],[60,7],[60,10],[60,14],[60,18],[56,7],[53,7],[64,10],[67,10],[54,16],[63.6,1],[13.6,12.1,'y'],[19,15,'y'],[19,5,'y'],[19,-3,'y'],[19,25,'y'],[10,29,'y'],[0,30,'y'],[-10,29,'y'],[-18,25,'y'],[-9,36,'y'],[-11,41,'y'],[0,41,'y'],[11,45,'y'],[17.5,36,'y'],[22,32,'y'],[-17,19,'y'],[-17,8,'y'],[-17,-3,'y'],[-25,-4,'y'],[-23.5,-1.5,'y'],[-24,8.5,'g'],[-22.5,14.5,'g'],[0,-11,'f'],[0,-19,'f'],[9,-16,'f'],[-9,-16,'f'],[16,-14,'f'],[-16,-14,'f'],[0,-28,'f'],[10,-28,'f'],[-10,-28,'f'],[0,-33,'f']],adj=[];
+const N=[[0,-6],[0,-2],[0,3],[0,9],[0,15],[0,19.2],[-6,-2],[-6,-6],[7,-2],[5,-6],[-6,9],[-6,13],[6,8],[6,12],[60,2],[60,7],[60,10],[60,14],[60,18],[56,7],[53,7],[64,10],[67,10],[54,16],[63.6,1],[13.6,12.1,'y'],[19,15,'y'],[19,5,'y'],[19,-3,'y'],[19,25,'y'],[10,29,'y'],[0,30,'y'],[-10,29,'y'],[-18,25,'y'],[-9,36,'y'],[-11,41,'y'],[0,41,'y'],[11,45,'y'],[17.5,36,'y'],[22,32,'y'],[-17,19,'y'],[-17,8,'y'],[-17,-3,'y'],[-25,-4,'y'],[-23.5,-1.5,'y'],[-24,8.5,'g'],[-22.5,14.5,'g'],[0,-11,'f'],[0,-19,'f'],[9,-16,'f'],[-9,-16,'f'],[16,-14,'f'],[-16,-14,'f'],[0,-28,'f'],[10,-28,'f'],[-10,-28,'f'],[0,-33,'f']],adj=[],adjT=[];
 const nl=n=>n[0]>30?1:((n[2]==='y'&&!G.yard)||(n[2]==='f'&&!G.fyard)||(n[2]==='g'&&!G.gard))?-1:0;
-function bfs(a,b){const pr={},q=[a];pr[a]=-1;while(q.length){const u=q.shift();if(u===b)break;for(const v of adj[u])if(!(v in pr)){pr[v]=u;q.push(v)}}if(!(b in pr))return[a];const p=[];for(let u=b;u!==-1;u=pr[u])p.unshift(u);return p}
+function bfs(a,b){/* A*: shortest route over the nav nodes, avoiding locked doors; wide (ghost-sized) edges first */
+const lk=doors.filter(d=>d.locked),blk=(i,j)=>{const ax=N[i][0],az=N[i][1],ex=N[j][0]-ax,ez=N[j][1]-az,l2=ex*ex+ez*ez||1;for(const d of lk){const t=cl(((d.x-ax)*ex+(d.z-az)*ez)/l2,0,1);if(H(ax+ex*t-d.x,az+ez*t-d.z)<.9)return true}return false};
+const run=(thin,lock)=>{const gs={[a]:0},pr={[a]:-1},op=[a],dn=new Set();while(op.length){let bi=0,bf=1e9;for(let k=0;k<op.length;k++){const u=op[k],f=gs[u]+H(N[u][0]-N[b][0],N[u][1]-N[b][1]);if(f<bf){bf=f;bi=k}}const u=op.splice(bi,1)[0];if(u===b)break;if(dn.has(u))continue;dn.add(u);const nb=thin?adj[u].concat(adjT[u]):adj[u];for(const v of nb){if(lock&&blk(u,v))continue;const g2=gs[u]+H(N[u][0]-N[v][0],N[u][1]-N[v][1]);if(!(v in gs)||g2<gs[v]){gs[v]=g2;pr[v]=u;op.push(v)}}}
+if(!(b in pr))return null;const p=[];for(let u=b;u!==-1;u=pr[u])p.unshift(u);return p};
+return run(false,true)||run(true,true)||run(true,false)||[a]}
 const nn=(x,z,l)=>{let b=-1,bd=1e9,fb=0,fd=1e9;N.forEach((n,i)=>{if(nl(n)!==l)return;const d=H(n[0]-x,n[1]-z);if(d<fd){fd=d;fb=i}if(d<bd&&los(x,z,n[0],n[1],true)){bd=d;b=i}});return b>=0?b:fb};
 function build(){
 if(W){scene.remove(W);W.traverse(o=>{if(o.geometry&&!o.isSprite)o.geometry.dispose()})}DRW.length=0;W=new T.Group();scene.add(W);C=[];ints=[];doors=[];lamps=[];solids=[];trig=[];falls=[];hides=[];swings=[];GL=null;GEN=null;SPL.length=0;POOL.forEach(s=>{s.vl=null;s.f=0;s.L.intensity=0});
@@ -765,7 +769,7 @@ else if(P.hs==='exit'){if(P.ht>.7){s.sw.forEach(w=>w.tgt=0);P.hid=null;P.hs=''}}
 function foundHide(){const s=P.hid;if(!s)return;P.hd=false;P.hold=false;P.x=s.out.x;P.z=s.out.z;P.y=1.65;P.pitch=0;P.yaw=Math.atan2(-(gh.x-P.x),-(gh.z-P.z));$('hide').className='';s.sw.forEach(w=>w.tgt=1);P.hid=null;P.hs='';fadeTo(0,.1);
 gh.st='chase';gh.seen=[P.x,P.z];gh.lose=0;gh.atk=.3;startJump()}
 /* ================= YARDS, MANGO CRATES, PLANKS, RANDOM SPAWNS (added) ================= */
-const REQ=[['flash',['bed']],['brass',['bed','din','hall']],['silver',['bed','din','hall']],['hammer',['bed','din','hall','lib','sto']],['cellar',['bed','din','hall','lib','sto','hid','yb','ye']],['fuse',['lib','sto','hid','yb','ye','sd','gd']],['rusty',['bas']],['locker',['lib','sto','hid','yb','ye','sd','gd','bas']],];
+const REQ=[['brass',['bed','din','hall']],['silver',['bed','din','hall']],['hammer',['bed','din','hall','lib','sto']],['cellar',['bed','din','hall','lib','sto','hid','yb','ye']],['fuse',['lib','sto','hid','yb','ye','sd','gd']],['rusty',['bas']],['locker',['lib','sto','hid','yb','ye','sd','gd','bas']],];
 const CRATES_DEF=[
 {zone:'bed',x:-5.2,z:-7.45,ry:.08},{zone:'bed',x:-9.35,z:-1.7,ry:1.3},{zone:'din',x:3.1,z:-6.95,ry:-.1},{zone:'din',x:11.15,z:1.7,ry:.3},{zone:'hall',x:1.5,z:4.6,ry:.05},
 {zone:'lib',x:-3.2,z:14.9,ry:-.15},{zone:'lib',x:-8.5,z:4.4,ry:.2},{zone:'hid',x:-13.2,z:13.1,ry:.4},
@@ -863,13 +867,13 @@ KEYZ={flash:['bed','din','hall','lib','sto'],brass:EARLY,silver:EARLY,hammer:EAR
 function spCheck(a){const got=new Set(),ids=Object.keys(a),ok=z=>OPENZ.indexOf(z)>=0||((z==='lib'||z==='hid')&&got.has('brass'))||(z==='sto'&&got.has('silver'))||(YARDZ.indexOf(z)>=0&&got.has('silver')&&got.has('hammer'))||(z==='bas'&&got.has('cellar'));let ch=true;while(ch){ch=false;for(const id of ids)if(!got.has(id)&&ok(a[id].zone)){got.add(id);ch=true}}return got.size===ids.length}
 const slotXZ=s=>s.k==='crate'?[s.c.x,s.c.z]:[s.l.x,s.l.z];
 function slotSurface(l){if(!solids.length)return l.y;try{const rc=new T.Raycaster();rc.set(new T.Vector3(l.x,l.y+.45,l.z),new T.Vector3(0,-1,0));rc.far=.95;const h=rc.intersectObjects(solids,false)[0];if(h&&Math.abs(h.point.y-l.y)<=.4)return h.point.y}catch(e){return l.y}return l.y<=.05?l.y:null}
-function placeAll(){const slots=[];CRT.forEach(c=>slots.push({k:'crate',c,zone:c.zone}));LOOSE_DEF.forEach(l=>{const sy=slotSurface(l);if(sy!==null){l.sy=sy;slots.push({k:'loose',l,zone:l.zone})}});
-const ids=Object.keys(KEYZ);let best=null;
+function placeAll(){const slots=[],FLS=LOOSE_DEF.find(l=>l.zone==='bed'&&l.x===-5&&l.z===.2);CRT.forEach(c=>slots.push({k:'crate',c,zone:c.zone}));LOOSE_DEF.forEach(l=>{if(l===FLS)return;const sy=slotSurface(l);if(sy!==null){l.sy=sy;slots.push({k:'loose',l,zone:l.zone})}});
+const ids=Object.keys(KEYZ).filter(id=>id!=='flash');let best=null;
 for(let at=0;at<900&&!best;at++){const D=at<350?8:at<650?5:2.5,cap=at<350?1:2,a={},zc={},used=[];let fail=false;
 for(const id of ids.slice().sort(()=>R()-.5)){const c=slots.filter(s=>KEYZ[id].indexOf(s.zone)>=0&&used.indexOf(s)<0&&(zc[s.zone]||0)<cap&&used.every(u=>{const p=slotXZ(u),q=slotXZ(s);return Math.hypot(p[0]-q[0],p[1]-q[1])>=D}));if(!c.length){fail=true;break}const s=c[R()*c.length|0];a[id]=s;used.push(s);zc[s.zone]=(zc[s.zone]||0)+1}
 if(!fail&&spCheck(a))best=a}
 if(!best){/* safe fallback: old rule set, then fill any gap from the open rooms */best={};const used=new Set();for(const id of ids){let c=slots.filter(s=>!used.has(s)&&KEYZ[id].indexOf(s.zone)>=0&&(id==='gate'||id==='rusty'||OPENZ.indexOf(s.zone)>=0||id==='fuse'||id==='cellar'||id==='locker'));if(!c.length)c=slots.filter(s=>!used.has(s)&&OPENZ.indexOf(s.zone)>=0);const s=c[R()*c.length|0];if(s){best[id]=s;used.add(s)}}}
-SP=best;ids.forEach(placeItem);placeShovel()}
+if(FLS){FLS.sy=FLS.y;best.flash={k:'loose',l:FLS,zone:'bed'}}SP=best;ids.concat(FLS?['flash']:[]).forEach(placeItem);placeShovel()}
 function placeItem(id){const s=SP[id];if(!s)return;const d=ITM[id];if(s.k==='crate'){s.c.items.push(id);return}const l=s.l,it=addInt(l.x,(l.sy!==undefined?l.sy:l.y)+(d.off||.018),l.z,d.lab,()=>{take(it);d.get()},d.mesh());it.settle=.35;it.mesh.rotation.y+=R()*3}
 function relicMesh(k){const g=new T.Group(),gold=new T.MeshStandardMaterial({color:0xc9a23c,metalness:.9,roughness:.3,emissive:0x3a2a05,envMap:envT}),paper=new T.MeshStandardMaterial({color:0xcbbf9a,roughness:.9,emissive:0x1a160a});
 if(k==='locket'){const a=new T.Mesh(new T.SphereGeometry(.035,12,8),gold);a.scale.y=1.3;g.add(a);const t=new T.Mesh(new T.TorusGeometry(.05,.004,6,16),gold);t.position.y=.06;g.add(t)}
@@ -938,7 +942,7 @@ if(t<.3){const k=t/.3;p=mx5(HP0,HP1,k*k*(3-2*k))}else if(t<.46){const k=(t-.3)/.
 if(t>=.46&&!P.hh){P.hh=1;barHit(b)}if(P.hm<=0){P.hm=0;P.hb=null}}
 HAM.position.set(p[0],p[1],p[2]);HAM.rotation.set(p[3],0,p[4])}
 /* ---------- ghost graph rebuild (called when new areas open) ---------- */
-function buildAdj(){adj.length=0;N.forEach(()=>adj.push([]));for(let i=0;i<N.length;i++)for(let j=i+1;j<N.length;j++)if(nl(N[i])===nl(N[j])&&H(N[i][0]-N[j][0],N[i][1]-N[j][1])<12&&los(N[i][0],N[i][1],N[j][0],N[j][1],true)){adj[i].push(j);adj[j].push(i)}}
+function buildAdj(){adj.length=0;adjT.length=0;N.forEach(()=>{adj.push([]);adjT.push([])});for(let i=0;i<N.length;i++)for(let j=i+1;j<N.length;j++)if(nl(N[i])===nl(N[j])&&H(N[i][0]-N[j][0],N[i][1]-N[j][1])<12&&los(N[i][0],N[i][1],N[j][0],N[j][1],true)){if(losW(N[i][0],N[i][1],N[j][0],N[j][1],.26)&&walk(N[i][0],N[i][1],N[j][0],N[j][1])){adj[i].push(j);adj[j].push(i)}else{adjT[i].push(j);adjT[j].push(i)}}}
 const HOUSE_R=[[-2.15,-8.15,2.15,22.15],[-10.15,-8.15,-2,16.15],[2,-8.15,12.15,3],[2,3,10.15,14.15],[-14.15,8,-10,14.15]];
 const inHouse=(x,z)=>HOUSE_R.some(r=>x>r[0]&&x<r[2]&&z>r[1]&&z<r[3]);
 /* ---------- the grounds ---------- */
@@ -1385,9 +1389,9 @@ const hs=new T.Mesh(new T.SphereGeometry(.12,28,20),new T.MeshStandardMaterial({
 const ckM=new T.MeshStandardMaterial({color:0x8a8f84,roughness:.75,emissive:0x101310});
 [-1,1].forEach(s=>{const c=new T.Mesh(new T.SphereGeometry(.026,10,8),ckM);c.scale.set(1,.7,.7);c.position.set(s*.062,-.012,.078);head.add(c)});
 /* sunken black eyes with glowing pinpoint pupils */
-const sM=new T.MeshBasicMaterial({color:0x000000}),pm=new T.MeshBasicMaterial({color:0x9fd8c4}),pup=[];
-[-1,1].forEach(s=>{const so=new T.Mesh(new T.SphereGeometry(.03,12,10),sM);so.scale.set(.95,1.2,.45);so.position.set(s*.042,.03,.088);head.add(so);const eb=new T.Mesh(new T.SphereGeometry(.0155,14,10),new T.MeshStandardMaterial({map:TX.eye,roughness:.3,emissive:0x1a1210}));eb.position.set(s*.042,.028,.092);head.add(eb);const p=new T.Mesh(new T.SphereGeometry(.0045,8,6),pm);p.position.set(s*.042,.028,.1065);head.add(p);pup.push(p)});
-const eg=[];[-1,1].forEach(s=>{const sp=new T.Sprite(new T.SpriteMaterial({map:TX.glow,color:0xff2010,transparent:true,opacity:0,depthWrite:false,blending:T.AdditiveBlending}));sp.scale.set(.09,.09,1);sp.position.set(s*.042,.028,.112);head.add(sp);eg.push(sp)});
+const sM=new T.MeshBasicMaterial({color:0x000000}),pm=new T.MeshBasicMaterial({color:0xb00000}),pup=[];
+[-1,1].forEach(s=>{const so=new T.Mesh(new T.SphereGeometry(.03,12,10),sM);so.scale.set(.95,1.2,.45);so.position.set(s*.042,.03,.088);head.add(so);const eb=new T.Mesh(new T.SphereGeometry(.0155,14,10),new T.MeshStandardMaterial({map:TX.eye,color:0xb01010,roughness:.3,emissive:0x4a0000}));eb.position.set(s*.042,.028,.092);head.add(eb);const p=new T.Mesh(new T.SphereGeometry(.0045,8,6),pm);p.position.set(s*.042,.028,.1065);head.add(p);pup.push(p)});
+const eg=[];[-1,1].forEach(s=>{const sp=new T.Sprite(new T.SpriteMaterial({map:TX.glow,color:0xd00000,transparent:true,opacity:0,depthWrite:false,blending:T.AdditiveBlending}));sp.scale.set(.09,.09,1);sp.position.set(s*.042,.028,.112);head.add(sp);eg.push(sp)});
 /* stretched mouth with real teeth; jaw opens when she shrieks */
 const mouth=new T.Group();mouth.position.set(0,-.048,.093);head.add(mouth);
 const cav=new T.Mesh(new T.SphereGeometry(.028,14,10),new T.MeshBasicMaterial({color:0x040000}));cav.scale.set(1.7,.4,.5);mouth.add(cav);const lips=new T.Mesh(new T.TorusGeometry(.027,.0055,8,20),new T.MeshStandardMaterial({color:0x4a1210,roughness:.45}));lips.scale.set(1.7,.4,.6);lips.position.z=.002;mouth.add(lips);
@@ -1396,10 +1400,10 @@ const tM=new T.MeshStandardMaterial({color:0xb7aa80,roughness:.5,emissive:0x120f
 for(let i=-5;i<=5;i++){const tx=i*.0088,l=(.012+R()*.006)*(1-Math.abs(i)*.08);const a=new T.Mesh(new T.ConeGeometry(.0034,l,5),tM);a.rotation.x=PI;a.position.set(tx,-l/2,.011);up.add(a);const b=new T.Mesh(new T.ConeGeometry(.0034,l*.9,5),tM);b.position.set(tx,l*.45,.011);dn.add(b)}
 const hair=mkHair(head,hm);
 /* second face on the back of the skull so she is horrifying from behind too */
-const bkE=[];[-1,1].forEach(s=>{const e=new T.Sprite(new T.SpriteMaterial({map:TX.glow,color:0xff1808,transparent:true,opacity:.7,depthWrite:false,blending:T.AdditiveBlending}));e.scale.set(.13,.13,1);e.position.set(s*.045,.03,-.125);head.add(e);bkE.push(e)});
+const bkE=[];[-1,1].forEach(s=>{const e=new T.Sprite(new T.SpriteMaterial({map:TX.glow,color:0xd00000,transparent:true,opacity:.7,depthWrite:false,blending:T.AdditiveBlending}));e.scale.set(.13,.13,1);e.position.set(s*.045,.03,-.125);head.add(e);bkE.push(e)});
 ;
 /* torn veil (animated every frame) */
-const vg=new T.PlaneGeometry(.6,1.5,6,14),veil=new T.Mesh(vg,new T.MeshStandardMaterial({map:TX.veil,color:0xd8d8cc,roughness:1,transparent:true,opacity:.95,side:T.DoubleSide,depthWrite:false,emissive:0x0d0d0b}));veil.position.set(0,-.62,-.2);veil.rotation.x=.18;head.add(veil);const v0=Float32Array.from(vg.attributes.position.array);
+const vg=new T.PlaneGeometry(.6,1.5,6,14),veil=new T.Mesh(vg,new T.MeshStandardMaterial({map:TX.veil,color:0xd8d8cc,roughness:1,transparent:true,opacity:.95,side:T.DoubleSide,depthWrite:false,emissive:0x0d0d0b}));veil.position.set(0,-.62,-.2);veil.rotation.x=.18;veil.visible=false;/* removed: its pale torn strips read as stray white strands behind her hair */head.add(veil);const v0=Float32Array.from(vg.attributes.position.array);
 /* long clawed hands */
 const nailM=new T.MeshStandardMaterial({color:0x120d0a,roughness:.35,metalness:.2});const fingers=parent=>{for(let f=0;f<5;f++){let p=new T.Group();p.position.set((f-2)*.0115,-.075,0);p.rotation.z=(f-2)*.1;p.rotation.x=.15+R()*.25;parent.add(p);let Lf=f===0||f===4?.04:.055;for(let k=0;k<3;k++){let s;if(k===2){s=new T.Mesh(new T.ConeGeometry(.0058,Lf*1.9,5),nailM);s.rotation.x=PI;s.position.y=-Lf*.95}else{s=new T.Mesh(new T.CylinderGeometry(.0058-k*.0009,.0066-k*.0009,Lf,5),sk);s.position.y=-Lf/2}p.add(s);const q=new T.Group();q.position.y=-Lf;q.rotation.x=.4+R()*.3;p.add(q);p=q;Lf*=.78}}};
 const arms=[];[-1,1].forEach(s=>{const sh=new T.Group();sh.position.set(s*.19,1.6,0);const upA=new T.Mesh(new T.CylinderGeometry(.03,.022,.36,7),sk);upA.position.y=-.18;const el=new T.Group();el.position.y=-.36;const fo=new T.Mesh(new T.CylinderGeometry(.022,.016,.4,7),sk);fo.position.y=-.2;const ha=new T.Group();ha.position.y=-.4;
@@ -1407,7 +1411,6 @@ const palm=new T.Mesh(new T.BoxGeometry(.05,.07,.014),sk);palm.position.y=-.035;
 const lsk=new T.MeshStandardMaterial({map:TX.skin,color:0xb8bdb2,roughness:.65,emissive:0x0a0c0a}),legs=[];
 [-1,1].forEach(sd=>{const p=new T.Group();p.position.set(sd*.085,.6,0);const lg=new T.Mesh(new T.CylinderGeometry(.034,.024,.72,10),lsk);lg.position.y=-.36;p.add(lg);const f=new T.Group();f.position.y=-.72;const ft=new T.Mesh(new T.BoxGeometry(.05,.028,.13),lsk);ft.position.set(0,.014,.04);f.add(ft);for(let k=0;k<5;k++){const to=new T.Mesh(new T.SphereGeometry(.0065,6,5),lsk);to.position.set(-.02+k*.01,.01,.11);f.add(to)}p.add(f);B.add(p);legs.push({p,f})});
 g.scale.setScalar(1.14);
-[-1,1].forEach(sd=>{for(let k=0;k<4;k++){const sp=new T.Mesh(new T.ConeGeometry(.012,.22+k*.05,5),new T.MeshStandardMaterial({color:0xcfc6ae,roughness:.6}));sp.position.set(sd*(.1+k*.045),1.5-k*.12,-.15);sp.rotation.z=-sd*(1.1+k*.12);sp.rotation.x=-.5;B.add(sp)}});
 const aura=new T.Sprite(new T.SpriteMaterial({map:TX.glow,color:0x9bb8c8,transparent:true,opacity:.1,depthWrite:false,blending:T.AdditiveBlending}));aura.scale.set(2.6,3.2,1);aura.position.y=1.2;g.add(aura);
 const light=new T.PointLight(0x8899cc,.5,6);g.visible=false;
 return{g,B,head,bkE,hairs:[],hair,legs,ph:0,st:0,stT:3,arms,dress,light,tw:0,mouth,cav,up,dn,pup,pm,veil,v0,aura,lips,es:-1,bl,eg,bloodAmt:0,hitT:9,kx:0,kz:0,hH:false}}
@@ -1426,19 +1429,54 @@ if(P.lvl===1&&G.ev.cellar===1)setTimeout(()=>G.st==='play'&&P.lvl===1&&scare('co
 function blackout(s){boT=s;A.spark();A.thud();shake=.3}
 /* ================= GHOST AI ================= */
 function pickNode(mn,mx,needLos){const c=N.filter(n=>nl(n)===P.lvl&&H(n[0]-P.x,n[1]-P.z)>mn&&H(n[0]-P.x,n[1]-P.z)<mx&&(!needLos||los(n[0],n[1],P.x,P.z,true)));return c.length?c[Math.floor(R()*c.length)]:null}
-function spawnFar(){let c=N.filter(n=>nl(n)===P.lvl&&H(n[0]-P.x,n[1]-P.z)>14&&!los(n[0],n[1],P.x,P.z,true));if(!c.length)c=N.filter(n=>nl(n)===P.lvl&&H(n[0]-P.x,n[1]-P.z)>8);if(!c.length)c=N.filter(n=>nl(n)===P.lvl);const n=c[Math.floor(R()*c.length)];gh.x=n[0];gh.z=n[1];gh.lvl=P.lvl;gh.vis=true;gh.path=[];gh.tg=null;gh.pause=2}
+let _gr={t:0,f:-9,s:null,k:-1};
+/* nodes reachable from node `from` without crossing a locked door (cached ~1s) */
+function gReach(from){const now=performance.now(),lk=doors.filter(d=>d.locked),key=lk.length;if(_gr.s&&_gr.f===from&&_gr.k===key&&now-_gr.t<1000)return _gr.s;
+const blk=(i,j)=>{const ax=N[i][0],az=N[i][1],ex=N[j][0]-ax,ez=N[j][1]-az,l2=ex*ex+ez*ez||1;for(const d of lk){const t=cl(((d.x-ax)*ex+(d.z-az)*ez)/l2,0,1);if(H(ax+ex*t-d.x,az+ez*t-d.z)<.9)return true}return false};
+const seen=new Set([from]),q=[from];while(q.length){const u=q.pop();for(const v of adj[u].concat(adjT[u])){if(seen.has(v)||blk(u,v))continue;seen.add(v);q.push(v)}}
+_gr={t:now,f:from,k:key,s:new Set([...seen].map(i=>N[i]))};return _gr.s}
+/* ghost only appears on the main level, only in areas she can actually walk to (no locked rooms, never the basement) */
+function spawnFar(){const from=P.lvl===0?nn(P.x,P.z,0):2,RS=gReach(from),ok=n=>nl(n)===0&&RS.has(n);let c=N.filter(n=>ok(n)&&H(n[0]-P.x,n[1]-P.z)>14&&!los(n[0],n[1],P.x,P.z,true));if(!c.length)c=N.filter(n=>ok(n)&&H(n[0]-P.x,n[1]-P.z)>8);if(!c.length)c=N.filter(ok);if(!c.length)c=N.filter(n=>nl(n)===0);const n=c[Math.floor(R()*c.length)];{const f=ngFree(n[0],n[1])||n;gh.x=f[0];gh.z=f[1]}gh.lvl=0;gh.vis=P.lvl===0;gh.rel=8;gh.path=[];gh.gp=null;gh.tg=null;gh.pause=2}
 function appear(x,z,dur,after){gh.x=x;gh.z=z;gh.st='stare';gh.t=dur;gh.after=after;gh.lvl=P.lvl;gh.vis=true;gh.face=Math.atan2(P.x-x,P.z-z);A.whisper();A.heart();shake=Math.max(shake,.15)}
 function scare(k){if(gh.st==='dormant'||gh.st==='gone'||gh.st==='chase'||gh.st==='kill'||scBusy()||ONCE.has('s_'+k))return;ONCE.add('s_'+k);let n;
 if(k==='corridor'){n=pickNode(9,22,true);if(n)appear(n[0],n[1],2.8,'vanish')}
 else if(k==='doorway'){n=pickNode(3.5,9,true);if(n)appear(n[0],n[1],2.2,'vanish')}
 else if(k==='behind'||k==='face'){const s=k==='face'?-1:1,x=P.x+Math.sin(P.yaw)*1.6*s*(k==='face'?1.2:1.9),z=P.z+Math.cos(P.yaw)*1.6*s*(k==='face'?1.2:1.9);if(!hit(x,z,.4)&&los(x,z,P.x,P.z,true)){appear(x,z,k==='face'?.8:1.4,k==='face'?'vanish':'chase');if(k==='face'){A.scream();shake=.7;boT=.5}}else{n=pickNode(5,16,true);if(n)appear(n[0],n[1],2.5,'vanish')}}}
+/* ===== GHOST NAVIGATION GRID: occupancy map of every collider (furniture, walls, locked doors), inflated by the ghost's body, + A* ===== */
+const NG={cs:.25,x0:-36,z0:-46,w:488,h:408,a:null,C:null,sg:-1,t:0,ok:false,gs:null,pr:null,vs:null,cs_:null,st:0};
+NG.a=new Uint8Array(NG.w*NG.h);NG.gs=new Float32Array(NG.w*NG.h);NG.pr=new Int32Array(NG.w*NG.h);NG.vs=new Uint32Array(NG.w*NG.h);NG.cs_=new Uint32Array(NG.w*NG.h);
+function ngBuild(){const a=NG.a,cs=NG.cs,r=.3,W=NG.w,Hh=NG.h;a.fill(0);const lk=new Set();for(const d of doors)if(d.locked&&d.cl)lk.add(d.cl);
+for(const c of C){if(!c.on||c.t==='t')continue;if(c.t==='d'&&!lk.has(c))continue;const i0=Math.max(0,Math.ceil((c.x0-r-NG.x0)/cs-.5)),i1=Math.min(W-1,Math.floor((c.x1+r-NG.x0)/cs-.5)),j0=Math.max(0,Math.ceil((c.z0-r-NG.z0)/cs-.5)),j1=Math.min(Hh-1,Math.floor((c.z1+r-NG.z0)/cs-.5));for(let j=j0;j<=j1;j++){const o=j*W;for(let i=i0;i<=i1;i++)a[o+i]=1}}}
+function ngEnsure(){const now=performance.now();if(NG.C===C&&now-NG.t<500)return;NG.t=now;let sg=C.length*7;for(const c of C)if(c.on)sg++;for(const d of doors)if(d.locked)sg+=1e5;if(NG.C!==C||sg!==NG.sg){NG.C=C;NG.sg=sg;ngBuild()}NG.ok=C.length>0}
+const ngBlk=(x,z)=>{const i=Math.floor((x-NG.x0)/NG.cs),j=Math.floor((z-NG.z0)/NG.cs);return i<0||j<0||i>=NG.w||j>=NG.h||NG.a[j*NG.w+i]===1};
+/* nearest walkable spot to a point (used to un-stick her and to place her out of furniture) */
+function ngFree(x,z){ngEnsure();if(!NG.ok)return null;if(!ngBlk(x,z))return [x,z];const cs=NG.cs;let bx=0,bz=0,bd=1e9;for(let R_=1;R_<=24;R_++){for(let k=-R_;k<=R_;k++){for(const q of[[k,-R_],[k,R_],[-R_,k],[R_,k]]){const px=x+q[0]*cs,pz=z+q[1]*cs;if(!ngBlk(px,pz)){const dd=H(q[0],q[1]);if(dd<bd){bd=dd;bx=px;bz=pz}}}}if(bd<1e9)return [bx,bz]}return null}
+/* straight-line walkability on the grid (cheap) */
+function walk(ax,az,bx,bz){ngEnsure();if(!NG.ok)return false;const L=H(bx-ax,bz-az),n=Math.max(1,Math.ceil(L/(NG.cs*.5)));for(let i=1;i<=n;i++){const t=i/n;if(L*t<.4)continue;if(ngBlk(ax+(bx-ax)*t,az+(bz-az)*t))return false}return true}
+/* A* over the grid, 8-way, no corner cutting, then string-pulled into a few waypoints */
+function ngPath(sx,sz,tx,tz){ngEnsure();if(!NG.ok)return null;const s0=ngFree(sx,sz),t0=ngFree(tx,tz);if(!s0||!t0)return null;const W=NG.w,Hh=NG.h,a=NG.a,cs=NG.cs;
+const si=Math.floor((s0[0]-NG.x0)/cs),sj=Math.floor((s0[1]-NG.z0)/cs),ti=Math.floor((t0[0]-NG.x0)/cs),tj=Math.floor((t0[1]-NG.z0)/cs),S=sj*W+si,Tt=tj*W+ti,st=++NG.st,gs=NG.gs,pr=NG.pr,vs=NG.vs,cd=NG.cs_;
+const hk=[],hf=[],push=(k,f)=>{let i=hk.length;hk.push(k);hf.push(f);while(i>0){const p=(i-1)>>1;if(hf[p]<=f)break;hk[i]=hk[p];hf[i]=hf[p];i=p}hk[i]=k;hf[i]=f},
+pop=()=>{const r=hk[0],lk=hk.pop(),lf=hf.pop(),n=hk.length;if(n){let i=0;for(;;){let c=2*i+1;if(c>=n)break;if(c+1<n&&hf[c+1]<hf[c])c++;if(hf[c]>=lf)break;hk[i]=hk[c];hf[i]=hf[c];i=c}hk[i]=lk;hf[i]=lf}return r};
+const hh=(i,j)=>{const dx=Math.abs(i-ti),dz=Math.abs(j-tj);return (dx+dz)+(1.4142-2)*Math.min(dx,dz)};
+gs[S]=0;vs[S]=st;pr[S]=-1;push(S,hh(si,sj));let ex=0,found=false;
+while(hk.length&&ex<70000){const u=pop();if(cd[u]===st)continue;cd[u]=st;ex++;if(u===Tt){found=true;break}const ui=u%W,uj=(u/W)|0;
+for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){if(!di&&!dj)continue;const ni=ui+di,nj=uj+dj;if(ni<0||nj<0||ni>=W||nj>=Hh)continue;const v=nj*W+ni;if(a[v])continue;if(di&&dj&&(a[uj*W+ni]||a[nj*W+ui]))continue;const g2=gs[u]+(di&&dj?1.4142:1);if(vs[v]!==st||g2<gs[v]){vs[v]=st;gs[v]=g2;pr[v]=u;push(v,g2+hh(ni,nj))}}}
+if(!found)return null;const cells=[];for(let u=Tt;u!==-1;u=pr[u])cells.push(u);cells.reverse();
+const pts=cells.map(u=>[NG.x0+((u%W)+.5)*cs,NG.z0+(((u/W)|0)+.5)*cs]);pts[0]=[sx,sz];const last=ngBlk(tx,tz)?pts[pts.length-1]:[tx,tz];pts[pts.length-1]=last;
+const out=[];let i=0;while(i<pts.length-1){let j=Math.min(pts.length-1,i+60);while(j>i+1&&!walk(pts[i][0],pts[i][1],pts[j][0],pts[j][1]))j--;out.push(pts[j]);i=j}return out}
 function step_(tx,tz,sp,dt){const g=gh,dx=tx-g.x,dz=tz-g.z,L=H(dx,dz)||1,ox=g.x,oz=g.z,vx=dx/L*sp*dt,vz=dz/L*sp*dt;mv(g,vx,vz,.28,true);
-if(H(g.x-ox,g.z-oz)<sp*dt*.35){/* blocked: slide along the wall / try diagonals */for(const a of[.6,-.6,1.2,-1.2,1.9,-1.9]){const c=Math.cos(a),n=Math.sin(a),rx=vx*c-vz*n,rz=vx*n+vz*c;if(!hit(g.x+rx,g.z+rz,.28,true)){g.x+=rx;g.z+=rz;break}}}
-if(hit(g.x,g.z,.2,true)){/* embedded in a wall: pop out toward the target */const q=nn(g.x,g.z,g.lvl),nd=N[q];if(nd){g.x+=(nd[0]-g.x)/(H(nd[0]-g.x,nd[1]-g.z)||1)*.15;g.z+=(nd[1]-g.z)/(H(nd[0]-g.x,nd[1]-g.z)||1)*.15}}g.face=la(g.face,Math.atan2(dx,dz),Math.min(1,dt*5));g.mvg=true;g.spd=sp;}
+if(H(g.x-ox,g.z-oz)<sp*dt*.35){/* blocked: pick the better side, commit to it ~0.8s so it walks around the obstacle */
+const tryS=sd=>{for(const a of[.6,1.2,1.9]){const c=Math.cos(a*sd),n=Math.sin(a*sd),rx=vx*c-vz*n,rz=vx*n+vz*c;if(!hit(g.x+rx,g.z+rz,.28,true))return[rx,rz]}return null};
+if(!g.ds||g.dsT<=0){const p=tryS(1),m=tryS(-1),dp=p?H(tx-g.x-p[0],tz-g.z-p[1]):1e9,dm=m?H(tx-g.x-m[0],tz-g.z-m[1]):1e9;g.ds=dp<=dm?1:-1}
+g.dsT=.8;let r=tryS(g.ds);if(!r){g.ds=-g.ds;r=tryS(g.ds)}if(r){g.x+=r[0];g.z+=r[1]}}else if(g.dsT>0)g.dsT-=dt;
+if(hit(g.x,g.z,.2,true)){/* embedded: push out to the nearest free spot */const f=ngFree(g.x,g.z);if(f){g.x+=(f[0]-g.x)*.3;g.z+=(f[1]-g.z)*.3}else{const q=nn(g.x,g.z,g.lvl),nd=N[q];if(nd){g.x+=(nd[0]-g.x)/(H(nd[0]-g.x,nd[1]-g.z)||1)*.15;g.z+=(nd[1]-g.z)/(H(nd[0]-g.x,nd[1]-g.z)||1)*.15}}}g.face=la(g.face,Math.atan2(dx,dz),Math.min(1,dt*5));g.mvg=true;g.spd=sp;}
 function losW(ax,az,bx,bz,w){const dx=bx-ax,dz=bz-az,L=H(dx,dz)||1,nx=-dz/L*w,nz=dx/L*w;return los(ax,az,bx,bz,true)&&los(ax+nx,az+nz,bx+nx,bz+nz,true)&&los(ax-nx,az-nz,bx-nx,bz-nz,true)}
-function follow(tx,tz,sp,dt){const g=gh,d=H(tx-g.x,tz-g.z);if(d<.2)return true;if(d<14&&losW(g.x,g.z,tx,tz,.28)){step_(tx,tz,sp,dt);return d<.6}
+function follow(tx,tz,sp,dt){const g=gh,d=H(tx-g.x,tz-g.z);if(d<.2)return true;ngEnsure();if(NG.ok){if(walk(g.x,g.z,tx,tz)){g.gp=null;step_(tx,tz,sp,dt);return d<.6}
+const _t=performance.now();if(_t>=(g.gfail||0)&&(!g.gp||!g.gp.length||_t-g.gpT>600||H(g.gtx-tx,g.gtz-tz)>1)){const pp=ngPath(g.x,g.z,tx,tz);g.gpT=_t;g.gtx=tx;g.gtz=tz;if(pp&&pp.length){g.gp=pp}else{g.gp=null;g.gfail=_t+1500}}
+if(g.gp&&g.gp.length){while(g.gp.length&&H(g.gp[0][0]-g.x,g.gp[0][1]-g.z)<.45)g.gp.shift();while(g.gp.length>1&&walk(g.x,g.z,g.gp[1][0],g.gp[1][1]))g.gp.shift();const w=g.gp[0];if(w){step_(w[0],w[1],sp,dt);return false}g.gp=null}}else if(d<14&&losW(g.x,g.z,tx,tz,.28)){step_(tx,tz,sp,dt);return d<.6}
 const _n=performance.now();if(!g._na||_n-g._na.t>300||H(g._na.x-g.x,g._na.z-g.z)>1.2||g._na.l!==g.lvl)g._na={t:_n,x:g.x,z:g.z,l:g.lvl,v:nn(g.x,g.z,g.lvl)};if(!g._nb||_n-g._nb.t>300||H(g._nb.x-tx,g._nb.z-tz)>1.2||g._nb.l!==g.lvl)g._nb={t:_n,x:tx,z:tz,l:g.lvl,v:nn(tx,tz,g.lvl)};const a=g._na.v,b=g._nb.v;if(a===b){step_(tx,tz,sp,dt);return d<.6}
-if(g.pk!==b||!g.path.length){g.pk=b;g.path=bfs(a,b).slice(1).map(i=>N[i])}const p=g.path[0];if(!p){step_(tx,tz,sp,dt);return d<.6}
+if(g.pk!==b||!g.path.length){g.pk=b;g.path=bfs(a,b).slice(1).map(i=>N[i])}while(g.path.length>1&&losW(g.x,g.z,g.path[1][0],g.path[1][1],.28)&&walk(g.x,g.z,g.path[1][0],g.path[1][1]))g.path.shift();const p=g.path[0];if(!p){step_(tx,tz,sp,dt);return d<.6}
 if(H(p[0]-g.x,p[1]-g.z)<.6)g.path.shift();else step_(p[0],p[1],sp,dt);return false}
 function hurt(dmg){if(P.dead)return;P.hp-=dmg;A.thud();shake=.5;setDmg(1);const fx=Math.sin(gh.face),fz=Math.cos(gh.face);mv(P,fx*.8,fz*.8,.32);if(P.hp<=0)die()}
 let _dread=0;
@@ -1453,9 +1491,9 @@ if(g.st!=='stagger'&&g.st!=='stare'&&g.st!=='rush'&&g.st!=='check'&&!P.hd){if((l
 else if(P.noise&&d<P.noise*ag&&g.st!=='chase'){g.st='investigate';g.seen=[P.x,P.z]}}
 g.cool=Math.max(0,(g.cool||0)-dt);if(P.hd&&P.hid&&g.cool<=0&&(g.st==='chase'||g.st==='investigate'||g.st==='search')&&H(g.x-P.hid.x,g.z-P.hid.z)<3.4){g.st='check';g.t=3.5+R()*3;g.cht=0;g.tg=null}
 switch(g.st){
-case 'wander':if(g.pause>0){g.pause-=dt;break}if(!g.tg){const c=N.filter(n=>nl(n)===g.lvl);g.tg=R()<.15*ag?N[nn(P.x,P.z,g.lvl)]:c[Math.floor(R()*c.length)];break}if(follow(g.tg[0],g.tg[1],.8,dt)){g.tg=null;g.pause=1+R()*3}break;
+case 'wander':if(g.pause>0){g.pause-=dt;break}if(!g.tg){const RS=gReach(nn(g.x,g.z,g.lvl)),c=N.filter(n=>nl(n)===g.lvl&&RS.has(n));g.tg=R()<.15*ag?N[nn(P.x,P.z,g.lvl)]:c[Math.floor(R()*c.length)];break}if(follow(g.tg[0],g.tg[1],.8,dt)){g.tg=null;g.pause=1+R()*3}break;
 case 'investigate':if(follow(g.seen[0],g.seen[1],1.15*Math.min(1.3,ag),dt)){g.st='search';g.t=10;g.tg=null}break;
-case 'search':g.t-=dt;if(!g.tg||follow(g.tg[0],g.tg[1],1.0,dt)){const c=N.filter(n=>nl(n)===g.lvl&&H(n[0]-g.seen[0],n[1]-g.seen[1])<12);g.tg=c[Math.floor(R()*c.length)]||N[0]}if(g.t<=0){g.st='wander';g.tg=null}break;
+case 'search':g.t-=dt;if(!g.tg||follow(g.tg[0],g.tg[1],1.0,dt)){const RS=gReach(nn(g.x,g.z,g.lvl)),c=N.filter(n=>nl(n)===g.lvl&&RS.has(n)&&H(n[0]-g.seen[0],n[1]-g.seen[1])<12);g.tg=c[Math.floor(R()*c.length)]||N[nn(g.x,g.z,g.lvl)]}if(g.t<=0){g.st='wander';g.tg=null}break;
 case 'chase':{if(ls&&!P.hd){g.seen=[P.x,P.z];g.lose=0}else g.lose+=dt*(P.hd?2:1);const sp=Math.min(2.55,1.85+ag*.18);
 if(d<1.35&&!P.hd){g.face=la(g.face,Math.atan2(P.x-g.x,P.z-g.z),.3);g.atk+=dt;if(g.atk>.5){hurt(26+ag*4);g.atk=-1}}else{if(g.atk>0)g.atk=Math.max(0,g.atk-dt);follow(g.seen[0],g.seen[1],sp,dt)}
 if(g.lose>5){g.st='search';g.t=14;g.tg=null}break}
@@ -1468,7 +1506,7 @@ case 'rush':g.t-=dt;step_(P.x,P.z,4.2,dt);if(d<1.5||g.t<=0){g.st='wander';g.tg=n
 case 'stagger':g.t-=dt;if(g.t<=0){g.st='chase';g.seen=[P.x,P.z];g.lose=0}break;
 case 'stare':g.face=la(g.face,Math.atan2(P.x-g.x,P.z-g.z),.2);g.t-=dt;if(g.t<=0){if(g.after==='chase'){g.st='chase';g.seen=[P.x,P.z]}else{blackout(.4);g.st='wander';g.tg=null;spawnFar()}}break}
 /* stuck -> supernatural phase */
-if(g.mvg&&g.st!=='stagger'){g.stk+=dt;if(g.stk>.9){if(H(g.x-g.sx,g.z-g.sz)<.5){g.sc=(g.sc||0)+1;const own=nn(g.x,g.z,g.lvl),n=g.sc>=2?(g.path[1]||g.path[0]||N[nn(P.x,P.z,g.lvl)]):(N[own]||N[0]);g.pk=-1;g.path=[];if(g.sc>=2||H(g.x-N[own][0],g.z-N[own][1])>.3){if(g.sc>=2&&g.st==='chase'&&H(n[0]-P.x,n[1]-P.z)<3){/* never pop next to player */}else{g.x=n[0];g.z=n[1]}}if(g.sc>=2)g.sc=0}else g.sc=0;g.sx=g.x;g.sz=g.z;g.stk=0}}else g.stk=0}
+if(g.mvg&&g.st!=='stagger'){g.stk+=dt;if(g.stk>.9){if(H(g.x-g.sx,g.z-g.sz)<.5){g.sc=(g.sc||0)+1;const own=nn(g.x,g.z,g.lvl),n=g.sc>=3?(g.path[1]||g.path[0]||N[nn(P.x,P.z,g.lvl)]):(N[own]||N[0]);g.pk=-1;g.path=[];g.gp=null;g.gfail=0;if(g.sc===1){/* 1st: try the other side and re-plan */g.ds=-(g.ds||1);g.dsT=1.2}else if(g.sc>=3||H(g.x-N[own][0],g.z-N[own][1])>.3){if(g.sc>=3&&g.st==='chase'&&H(n[0]-P.x,n[1]-P.z)<3){/* never pop next to player */}else{const f=ngFree(n[0],n[1])||n;g.x=f[0];g.z=f[1]}}if(g.sc>=3)g.sc=0}else g.sc=0;g.sx=g.x;g.sz=g.z;g.stk=0}}else g.stk=0}
 function die(){if(P.dead)return;P.dead=1;P.hid=null;P.hd=false;$('hide').className='';JS.on=false;$('js').className='';G.st='dying';G.dt=0;gh.st='kill';const fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw);gh.x=P.x+fx*.75;gh.z=P.z+fz*.75;gh.face=Math.atan2(-fx,-fz);gh.vis=true;gh.lvl=P.lvl;spot.intensity=1.2;fl.on=true;if(document.pointerLockElement)document.exitPointerLock()}
 function escape(){G.st='won';$('fade').style.background='#fff';$('fade').style.opacity=1;A.unlock();if(document.pointerLockElement)document.exitPointerLock();setTimeout(()=>{showWin();$('hud').classList.remove('on');$('fade').style.opacity=0},2600)}
 /* ================= WEAPON ================= */
@@ -1699,7 +1737,7 @@ a.sh.rotation.x=lp(a.sh.rotation.x,tx,stg?.45:.15);a.sh.rotation.z=a.s*((stg?1.3
 m.legs.forEach((L,i)=>{const sd=i?PI:0,A=walking?(ch?.7:.42):0,asym=i?1:1.35;L.p.rotation.x=lp(L.p.rotation.x,stg?Math.sin(t*44+sd)*.13*(dbl+rec)-.3*dbl:Math.sin(ph+sd)*A*asym,.3);L.f.rotation.x=-L.p.rotation.x*.7+.25});
 m.dress.scale.set((1+Math.sin(t*4)*.04)*(1+rec*.12),1-rec*.05,(1+Math.cos(t*3.6)*.04)*(1+rec*.12));
 m.light.position.set(lx,jv?P.y+.1:1.3,lz);m.light.intensity=jv?2.6:.45+(g.d<6?.5:0)+(R()<.05?.5:0)+(stg?R()*2.4*(rec+.25):0);m.light.color.setHex(stg?0xb02020:ch?0xa01010:0x8899cc);
-const es=(ch||stg)?2:(g.st==='stare'||g.st==='check')?1:0;if(m.es!==es){m.es=es;m.pm.color.setHex(es===2?0xff1000:es===1?0xff5040:0xff2a1a)}
+const es=(ch||stg)?2:(g.st==='stare'||g.st==='check')?1:0;if(m.es!==es){m.es=es;m.pm.color.setHex(es===2?0xff0000:es===1?0xd00000:0xa80000)}
 const ps=es===2?3+Math.sin(t*30)*.3:1.8+Math.sin(t*5)*.2;m.pup[0].scale.setScalar(ps);m.pup[1].scale.setScalar(ps);m.eg.forEach(e=>{e.material.opacity=es===2?.95:es===1?.7+Math.sin(t*9)*.15:.5+Math.sin(t*3)*.1;e.scale.setScalar(es===2?.2+Math.sin(t*25)*.02:es===1?.15:.12)});
 const op=jv?1:ch?.85+.15*Math.abs(Math.sin(t*22)):g.st==='stare'?.6+.15*Math.sin(t*3):g.st==='check'?.45:stg?.8+.2*Math.abs(Math.sin(t*26)):.4+.15*Math.sin(t*1.5);
 m.cav.scale.y=.4+op*1.7;m.lips.scale.y=m.cav.scale.y;const jh=m.cav.scale.y*.026;m.up.position.y=jh;m.dn.position.y=-jh;m.mouth.position.y=-.048-op*.014;
@@ -1835,7 +1873,7 @@ function crateGrab(c){ONCE.add('grab');scMark('grab');const a=getArm();SQ.k='gra
 function crawlScare(){if(SQ.k||RS.st===2||RS.st===3||RS.st===1)return false;const n=pickNode(9,19,true);if(!n)return false;const b=burnGet(),side=R()<.5?-1:1,rx=Math.cos(P.yaw),rz=-Math.sin(P.yaw),ax=P.x+rx*1.6*side,az=P.z+rz*1.6*side,L=H(ax-n[0],az-n[1])||1;
 SQ.k='crawl';SQ.t=0;SQ.lock=false;SQ.vx=(ax-n[0])/L;SQ.vz=(az-n[1])/L;SQ.d=0;b.g.visible=true;b.g.position.set(n[0],0,n[1]);b.g.rotation.y=Math.atan2(SQ.vx,SQ.vz);setPose(b,'crawl',true);b.boost=1;G.sx.cd=50;A.whoosh();return true}
 function bridePose(m,t,open,arms){m.B.position.y=.12+Math.sin(t*2)*.05;m.head.rotation.y=Math.sin(t*.7)*.2;m.head.rotation.x=.12;m.arms.forEach(a=>{a.sh.rotation.x=arms;a.sh.rotation.z=a.s*(.25+Math.sin(t*9)*.12);a.el.rotation.x=-.3});
-m.cav.scale.y=.4+open*1.7;m.lips.scale.y=m.cav.scale.y;const jh=m.cav.scale.y*.026;m.up.position.y=jh;m.dn.position.y=-jh;m.mouth.position.y=-.048-open*.014;m.pm.color.setHex(0xff2412);m.pup.forEach(p=>p.scale.setScalar(1.9));
+m.cav.scale.y=.4+open*1.7;m.lips.scale.y=m.cav.scale.y;const jh=m.cav.scale.y*.026;m.up.position.y=jh;m.dn.position.y=-jh;m.mouth.position.y=-.048-open*.014;m.pm.color.setHex(0xff0000);m.pup.forEach(p=>p.scale.setScalar(1.9));
 const vp=m.veil.geometry.attributes.position,v0=m.v0;for(let i=0;i<vp.count;i++){const j=i*3,y0=v0[j+1],k=(.75-y0)/1.5;vp.setX(i,v0[j]+Math.sin(t*6+y0*5)*.05*k);vp.setZ(i,v0[j+2]+Math.cos(t*5+y0*4)*.08*k)}vp.needsUpdate=true}
 function scLight(x,y,z,col,i){BL.color.setHex(col);BL.position.set(x,y,z);BL.intensity=i}
 function scRun(dt,tm){const k=SQ.k;if(!k)return;SQ.t+=dt;const t=SQ.t,fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw);
