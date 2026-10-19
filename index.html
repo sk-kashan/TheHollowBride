@@ -129,7 +129,7 @@ body.mob #inv{top:70px;right:80px}
 <div class="scr" id="ctrl"><h2>Controls</h2><table>
 <tr><td>W A S D</td><td>Move</td></tr><tr><td>Mouse</td><td>Look (click to capture)</td></tr><tr><td>Shift</td><td>Sprint (drains stamina, loud)</td></tr>
 <tr><td>Ctrl or C</td><td>Crouch / sneak (quiet)</td></tr><tr><td>E</td><td>Interact, pick up, open doors, climb ladders, read</td></tr><tr><td>F</td><td>Flashlight</td></tr>
-<tr><td>Left click</td><td>Fire pistol</td></tr><tr><td>R</td><td>Reload</td></tr><tr><td>E (near a closet / bed)</td><td>Hide. Hold SPACE to hold your breath while she searches</td></tr><tr><td>1 / 2 / 3 / Q</td><td>Equip pistol / hammer / shovel / cycle</td></tr><tr><td>E at a grave</td><td>Examine it, or dig it up with the shovel</td></tr><tr><td>Digital lock</td><td>Type digits or click keys, Enter to confirm</td></tr><tr><td>E at boarded planks</td><td>Swing the hammer (3 hits break them)</td></tr><tr><td>E at a mango crate</td><td>Search it (once)</td></tr><tr><td>Tab</td><td>Inventory</td></tr><tr><td>Esc</td><td>Pause</td></tr></table><p class="row">Phone / tablet: left thumb moves, right thumb looks, on-screen buttons do the rest. Switch to touch controls in Settings on any device.</p>
+<tr><td>Left click</td><td>Fire pistol</td></tr><tr><td>Right mouse (hold)</td><td>Aim down the sights: steadier, tighter shots</td></tr><tr><td>R</td><td>Reload</td></tr><tr><td>E (near a closet / bed)</td><td>Hide. Hold SPACE to hold your breath while she searches</td></tr><tr><td>1 / 2 / 3 / Q</td><td>Equip pistol / hammer / shovel / cycle</td></tr><tr><td>E at a grave</td><td>Examine it, or dig it up with the shovel</td></tr><tr><td>Digital lock</td><td>Type digits or click keys, Enter to confirm</td></tr><tr><td>E at boarded planks</td><td>Swing the hammer (3 hits break them)</td></tr><tr><td>E at a mango crate</td><td>Search it (once)</td></tr><tr><td>Tab</td><td>Inventory</td></tr><tr><td>Esc</td><td>Pause</td></tr></table><p class="row">Phone / tablet: left thumb moves, right thumb looks, on-screen buttons do the rest. Switch to touch controls in Settings on any device.</p>
 <p>She hears running and gunfire, and she sees your light. Staggering her buys time; it does not end her.</p><button id="bBack">Back</button></div>
 <div class="scr" id="pause"><h2>Paused</h2><button id="bRes">Resume</button><button id="bRst">Restart</button>
 <div class="row">Volume<input type="range" class="vol" min="0" max="1" step=".05" value=".7">Mute<input type="checkbox" class="mute"> Brightness<input type="range" class="bri" min=".4" max="1.6" step=".05" value=".85"></div></div>
@@ -168,7 +168,7 @@ o(f1,f2,d,v,ty,dst){if(!this.c)return;const c=this.c,s=c.createOscillator(),g=c.
 pos(x,y,z){if(!this.c)return;const p=this.p;if(p.positionX){p.positionX.value=x;p.positionY.value=y;p.positionZ.value=z}else p.setPosition(x,y,z)},
 lis(cam){if(!this.c)return;const L=this.c.listener,d=new T.Vector3();cam.getWorldDirection(d);const p=cam.position;if(L.positionX){L.positionX.value=p.x;L.positionY.value=p.y;L.positionZ.value=p.z;L.forwardX.value=d.x;L.forwardY.value=d.y;L.forwardZ.value=d.z;L.upX.value=0;L.upY.value=1;L.upZ.value=0}else{L.setPosition(p.x,p.y,p.z);L.setOrientation(d.x,d.y,d.z,0,1,0)}},
 step(v){if(this.out>.5)this.n(.16,2600,500,v*.7,'bandpass',null,.8);else this.n(.12,380,90,v,'lowpass')},gstep(){this.n(.25,260,50,.9,'lowpass',this.p);this.o(60,35,.25,.5,'sine',this.p)},
-shotS(){this.n(.4,7000,150,1);this.o(130,35,.3,.9,'square')},click(){this.o(900,400,.05,.25,'square')},
+shotS(){this.n(.05,9000,2500,1.2,'highpass');this.n(.35,6000,200,.9);this.o(150,38,.28,.95,'square');this.o(70,28,.4,.7,'sine');setTimeout(()=>this.n(.9,1800,120,.22,'lowpass'),60);setTimeout(()=>this.n(.7,1200,100,.12,'lowpass'),170)},click(){this.o(900,400,.05,.25,'square')},dry(){this.o(1800,700,.03,.2,'square');setTimeout(()=>this.n(.04,2500,900,.15,'bandpass'),25)},
 reloadS(){this.click();setTimeout(()=>this.n(.15,3000,800,.3,'bandpass'),500);setTimeout(()=>this.click(),1000)},
 creakS(){this.o(190,85,.8,.1,'sawtooth');this.n(.8,900,250,.12,'bandpass',null,8)},
 whisper(){this.n(1.5,2000,800,.25,'bandpass',this.p,5);setTimeout(()=>this.n(1.2,1500,700,.2,'bandpass',this.p,6),700)},
@@ -355,30 +355,35 @@ if(holes)holes.forEach(h=>{const p=new T.Path();h.forEach((q,i)=>i?p.lineTo(q[0]
 const g=new T.ExtrudeGeometry(s,{depth:w,bevelEnabled:true,bevelSize:bev,bevelThickness:bev,bevelSegments:3,curveSegments:3});g.translate(0,0,-w/2);g.rotateY(PI/2);const m=new T.Mesh(g,mat);m.castShadow=false;pistol.add(m);return m};
 const bxm=(w,h,l,mat,x,y,xl)=>{const m=new T.Mesh(new T.BoxGeometry(w,h,l),mat);m.position.set(x,y,-xl);pistol.add(m);return m};
 /* slide: rear sight, front sight, chamfered front */
-const slide=ex([[0,0],[0,.021],[.005,.0305],[.011,.0315],[.0115,.0375],[.0215,.0375],[.022,.0315],[.1635,.0315],[.164,.0355],[.1695,.0355],[.1705,.0315],[.178,.0295],[.1865,.0255],[.1865,0]],.0255,steel,.0025);
+const sg=new T.Group();pistol.add(sg);const slide=ex([[0,0],[0,.021],[.005,.0305],[.011,.0315],[.1705,.0315],[.178,.0295],[.1865,.0255],[.1865,0]],.0255,steel,.0025);sg.add(slide);
 /* frame rails + dust cover + trigger guard (real hole) */
-ex([[-.004,-.006],[0,0],[.1865,0],[.1865,-.016],[.126,-.016],[.126,-.056],[.121,-.0625],[.056,-.0625],[-.0153,-.0625]],.0215,poly,.0015,[[[.0668,-.016],[.1205,-.016],[.1205,-.0545],[.1165,-.0585],[.058,-.0585]]]);
+ex([[-.004,-.006],[0,0],[.1865,0],[.1865,-.016],[.126,-.016],[.126,-.0545],[.1248,-.0592],[.1215,-.0618],[.118,-.0625],[.056,-.0625],[-.0153,-.0625]],.0215,poly,.0015,[[[.0668,-.016],[.1205,-.016],[.1205,-.0545],[.1165,-.0585],[.058,-.0585]]]);
 /* wider stippled grip with finger grooves */
 ex([[-.005,-.0135],[.0668,-.0135],[.0579,-.0585],[.0570,-.064],[.0546,-.0665],[.0562,-.07],[.0518,-.0735],[.0534,-.0775],[.0493,-.081],[.0508,-.085],[.0468,-.088],[.0475,-.093],[.0455,-.1175],[-.0265,-.1175],[-.0225,-.1],[-.017,-.07],[-.01,-.04]],.03,poly,.002);
 /* trigger, slide stop, mag catch */
-ex([[.089,-.0165],[.0955,-.0165],[.1015,-.0495],[.0955,-.0525],[.0875,-.0395],[.0865,-.0245]],.0065,blk,.0008);
+const trg=ex([[.089,-.0165],[.0955,-.0165],[.1015,-.0495],[.0955,-.0525],[.0875,-.0395],[.0865,-.0245]],.0065,blk,.0008);
 const ss=ex([[.0455,-.0005],[.0825,-.0005],[.0835,-.0075],[.0555,-.0075],[.0455,-.0035]],.0035,steel,.0006);ss.position.x=-.0142;
+const tdl=ex([[.0905,-.0035],[.0985,-.0015],[.1045,-.0035],[.1045,-.0095],[.0905,-.0095]],.003,blk,.0006);tdl.position.x=-.0132;
 const mc=new T.Mesh(new T.CylinderGeometry(.0042,.0042,.004,10),steel);mc.rotation.z=PI/2;mc.position.set(-.0182,-.033,-.0625);pistol.add(mc);
 /* serrations (rear + front) */
-for(let i=0;i<7;i++)bxm(.0309,.019,.0013,blk,0,.0145,.003+i*.003);
-for(let i=0;i<5;i++)bxm(.0309,.019,.0013,blk,0,.0145,.128+i*.0032);
+const sBox=(w,h,l,mat,x,y,z)=>{const m=new T.Mesh(new T.BoxGeometry(w,h,l),mat);m.position.set(x,y,z);sg.add(m);return m},sDot=(r,x,y,z)=>{const d=new T.Mesh(new T.SphereGeometry(r,10,8),dotM);d.position.set(x,y,z);d.scale.z=.35;sg.add(d)};
+for(let i=0;i<7;i++)sBox(.0309,.019,.0013,blk,0,.0145,-(.003+i*.003));
+for(let i=0;i<5;i++)sBox(.0309,.019,.0013,blk,0,.0145,-(.128+i*.0032));
 /* ejection port + engraved text decals */
-const port=new T.Mesh(new T.PlaneGeometry(.04,.012),new T.MeshBasicMaterial({color:0x050505}));port.position.set(.0153,.0235,-.08);port.rotation.y=PI/2;pistol.add(port);
-const tp=new T.Mesh(new T.PlaneGeometry(.118,.0148),new T.MeshBasicMaterial({map:TX.slideTxt,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));tp.position.set(-.0154,.0165,-.1);tp.rotation.y=-PI/2;pistol.add(tp);
+const port=new T.Mesh(new T.PlaneGeometry(.04,.012),new T.MeshBasicMaterial({color:0x050505}));port.position.set(.0153,.0235,-.08);port.rotation.y=PI/2;sg.add(port);
+const tp=new T.Mesh(new T.PlaneGeometry(.118,.0148),new T.MeshBasicMaterial({map:TX.slideTxt,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));tp.position.set(-.0154,.0165,-.1);tp.rotation.y=-PI/2;sg.add(tp);
 /* sight dots, barrel */
-[[-.007,.0357,.0215],[.007,.0357,.0215],[0,.0345,.1635]].forEach(a=>{const d=new T.Mesh(new T.SphereGeometry(.0015,6,5),dotM);d.position.set(a[0],a[1],-a[2]);pistol.add(d)});
-const brl=new T.Mesh(new T.CylinderGeometry(.0052,.0052,.012,12),blk);brl.rotation.x=PI/2;brl.position.set(0,.0215,-.1905);pistol.add(brl);
-const bore=new T.Mesh(new T.CircleGeometry(.0036,10),new T.MeshBasicMaterial({color:0x000000}));bore.position.set(0,.0215,-.1966);bore.rotation.y=PI;pistol.add(bore);
+sBox(.0036,.006,.009,blk,-.0037,.0345,-.016);sBox(.0036,.006,.009,blk,.0037,.0345,-.016);sDot(.0012,-.0037,.0345,-.0113);sDot(.0012,.0037,.0345,-.0113);
+sBox(.0034,.0045,.006,blk,0,.03375,-.1665);sDot(.0012,0,.0338,-.1634);
+sBox(.0195,.0125,.0016,poly,0,.0135,.0008);{const fp=new T.Mesh(new T.CircleGeometry(.0012,10),new T.MeshBasicMaterial({color:0x000000}));fp.position.set(0,.0135,.0017);sg.add(fp)}
+const opn=new T.Mesh(new T.CircleGeometry(.0074,16),new T.MeshBasicMaterial({color:0x020202}));opn.position.set(0,.0215,-.1893);opn.rotation.y=PI;pistol.add(opn);
+const brl=new T.Mesh(new T.CylinderGeometry(.0056,.0056,.008,14),steel);brl.rotation.x=PI/2;brl.position.set(0,.0215,-.1885);pistol.add(brl);
+const bore=new T.Mesh(new T.CircleGeometry(.0036,10),new T.MeshBasicMaterial({color:0x000000}));bore.position.set(0,.0215,-.1927);bore.rotation.y=PI;pistol.add(bore);
 /* magazine (animated on reload) + baseplate */
 const mag=new T.Group();mag.position.set(0,-.0135,-.0309);mag.rotation.x=-.203;
 const mb1=new T.Mesh(new T.BoxGeometry(.0215,.1,.0345),steel);mb1.position.y=-.05;const mpl=new T.Mesh(new T.BoxGeometry(.0285,.01,.05),poly);mpl.position.set(0,-.101,.004);mag.add(mb1,mpl);pistol.add(mag);
-const mf=new T.Group();[0,PI/2].forEach(ry=>{const p=new T.Mesh(new T.PlaneGeometry(.17,.17),new T.MeshBasicMaterial({map:TX.flash,transparent:true,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide,fog:false}));p.rotation.y=ry;mf.add(p)});mf.position.set(0,.0215,-.21);mf.visible=false;pistol.add(mf);
-return{pistol,slide,mag,mf}}
+const mf=new T.Group();[0,PI/2].forEach(ry=>{const p=new T.Mesh(new T.PlaneGeometry(.17,.17),new T.MeshBasicMaterial({map:TX.flash,transparent:true,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide,fog:false}));p.rotation.y=ry;mf.add(p)});mf.position.set(0,.0215,-.2);mf.visible=false;pistol.add(mf);
+return{pistol,slide:sg,mag,mf,trg}}
 /* ---------- first-person gun with gloved hands ---------- */
 const gun=new T.Group(),B=buildPistol(),pistol=B.pistol;gun.add(pistol);
 const leather=new T.MeshStandardMaterial({color:0x1a1a1d,roughness:.5,metalness:.05,map:TX.leather,bumpMap:TX.leather,bumpScale:1.5,envMap:X.envT,envMapIntensity:.35}),
@@ -408,10 +413,11 @@ const cuff=new T.Mesh(new T.CylinderGeometry(r*1.12,r*1.02,.075,16),leather);cuf
 const st=new T.Mesh(new T.CylinderGeometry(r*1.16,r*1.16,.022,16),strapM);st.quaternion.setFromUnitVectors(q,dir);st.position.set(w[0],w[1],w[2]).addScaledVector(dir,.05);tg.add(st);
 const sl=new T.Mesh(new T.CylinderGeometry(r*1.5,r*1.2,l,16),sleeveM);sl.quaternion.setFromUnitVectors(q,dir);sl.position.set(w[0],w[1],w[2]).addScaledVector(dir,.07+l/2);tg.add(sl)};
 tg=hand;arm([.058,-.075,.075],[.25,-.45,.85],.6,.029);tg=lh;arm([-.058,-.09,.062],[-.42,-.42,.8],.6,.029);
-return{gun,pistol,slide:B.slide,mag:B.mag,mf:B.mf,buildPistol,lh}}
+const nmag=B.mag.clone();nmag.visible=false;pistol.add(nmag);
+return{gun,pistol,slide:B.slide,mag:B.mag,nmag,mf:B.mf,trg:B.trg,buildPistol,lh}}
 
 let envT=null;try{const pmg=new T.PMREMGenerator(ren),es=new T.Scene();es.background=new T.Color(0x06070a);[[0xffe0b0,3,4,3,2,3,.3,3],[0x8090c0,1.5,-4,2,-3,3,.3,3],[0xffffff,1.2,0,5,0,5,.2,5],[0xffc080,.8,0,-.5,-5,4,1,.2]].forEach(a=>{const m=new T.Mesh(new T.BoxGeometry(a[5],a[6],a[7]),new T.MeshBasicMaterial({color:new T.Color(a[0]).multiplyScalar(a[1])}));m.position.set(a[2],a[3],a[4]);es.add(m)});envT=pmg.fromScene(es,.04).texture}catch(e){envT=null}
-const GM=makeGun(T,{envT,TX}),gun=GM.gun,pistol=GM.pistol,slide=GM.slide,mag=GM.mag,mf=GM.mf;
+const GM=makeGun(T,{envT,TX}),gun=GM.gun,pistol=GM.pistol,slide=GM.slide,mag=GM.mag,nmag=GM.nmag,mf=GM.mf;
 const mfl=new T.PointLight(0xffaa44,0,9);mfl.position.set(.14,-.12,-.8);cam.add(mfl);
 const gfl=new T.PointLight(0xfff0e0,0,1.7,2);gfl.position.set(.1,.12,.15);cam.add(gfl);
 const GB=[.13,-.165,-.42];gun.scale.setScalar(1.7);gun.position.set(GB[0],GB[1],GB[2]);gun.rotation.y=.05;gun.visible=false;cam.add(gun);
@@ -462,13 +468,47 @@ const st=new T.Points(gg,new T.PointsMaterial({size:1.6,sizeAttenuation:false,ve
 const mm=new T.Sprite(new T.SpriteMaterial({map:TX.moon,fog:false,transparent:true,depthWrite:false}));mm.material.color.setHex(0xff5a40);mm.scale.set(16,16,1);mm.position.set(-22,26,-30);SKY.add(mm)}
 SKY.visible=false;
 let gsx=0,gsy=0,lyaw=0,lpit=0;
-function gunUpd(dt){gfl.intensity=gun.visible?.9:(SL>.05?1.25:0);gfl.distance=SL>.05?2.8:1.7;if(!gun.visible)return;GM.lh.visible=!fl.own;
+const MD=[0,-.9795,.2016],GRL={e:false,d:0,s:0},dMags=[],_dp=new T.Vector3(),_dq=new T.Quaternion(),_ds=new T.Vector3(),_drc=new T.Raycaster(),_dE=new T.Euler();
+/* the spent magazine: real gravity, spin, a bounce or two, then it lies on its side */
+function dropMag(){const d=mag.clone();mag.matrixWorld.decompose(_dp,_dq,_ds);d.position.copy(_dp);d.quaternion.copy(_dq);d.scale.copy(_ds);d.visible=true;scene.add(d);
+const rt=ev2.set(1,0,0).applyQuaternion(cam.quaternion),v=new T.Vector3(rt.x*.3+(R()-.5)*.25,-.6,rt.z*.3+(R()-.5)*.25);let fy=0;
+try{_drc.set(new T.Vector3(_dp.x,_dp.y,_dp.z),new T.Vector3(0,-1,0));_drc.far=2.4;const h=_drc.intersectObjects(solids,false)[0];if(h)fy=h.point.y}catch(e){}
+_dE.set(0,R()*6.28,PI/2);dMags.push({m:d,v,w:new T.Vector3((R()-.5)*7,(R()-.5)*4,(R()-.5)*7),fy,t:0,rest:false,lay:new T.Quaternion().setFromEuler(_dE),hit:0});
+if(dMags.length>5){const o=dMags.shift();scene.remove(o.m)}}
+function dmUpd(dt){for(let i=dMags.length-1;i>=0;i--){const o=dMags[i],m=o.m;o.t+=dt;if(o.t>14){scene.remove(m);dMags.splice(i,1);continue}
+if(o.rest){m.quaternion.slerp(o.lay,Math.min(1,dt*14));m.position.y+=(o.fy+.012-m.position.y)*Math.min(1,dt*14);continue}
+o.v.y-=9.8*dt;m.position.addScaledVector(o.v,dt);m.rotateX(o.w.x*dt);m.rotateY(o.w.y*dt);m.rotateZ(o.w.z*dt);
+if(m.position.y<o.fy+.05&&o.v.y<0){m.position.y=o.fy+.05;if(!o.hit++)A.click();o.v.y*=-.3;o.v.x*=.5;o.v.z*=.5;o.w.multiplyScalar(.4);if(Math.abs(o.v.y)<.7){o.rest=true}}}}
+
+let ADSw=false,ADSk=0,SPk=0,XH=null,ADSh=false;const SLT=.034;
+function gunUpd(dt){dmUpd(dt);ADSk=lp(ADSk,(ADSw&&gun.visible&&held==='gun'&&P.rl<=0&&!P.spr&&G.st==='play'&&!P.hid&&!P.cb)?1:0,Math.min(1,dt*10));SPk=lp(SPk,(P.spr&&P.rl<=0)?1:0,Math.min(1,dt*7));gfl.intensity=gun.visible?.9:(SL>.05?1.25:0);{const hh=ADSk>.45&&gun.visible;if(hh!==ADSh){ADSh=hh;XH=XH||document.getElementById('cross');if(XH)XH.style.visibility=hh?'hidden':''}}gfl.distance=SL>.05?2.8:1.7;if(!gun.visible)return;GM.lh.visible=!fl.own||P.rl>0;
 const dyw=la(lyaw,P.yaw,1)-lyaw,dpt=P.pitch-lpit;lyaw=P.yaw;lpit=P.pitch;const k=Math.min(1,dt*9);gsx=lp(gsx,cl(dyw*.8,-.07,.07),k);gsy=lp(gsy,cl(-dpt*.8,-.05,.05),k);
-let tilt=0,mg=0,sl=0;const rp=P.rl>0?1-P.rl/1.6:-1;
-if(rp>=0){tilt=rp<.15?rp/.15:rp<.85?1:(1-rp)/.15;mg=rp<.2?0:rp<.4?-(rp-.2)/.2*.17:rp<.55?-.17:rp<.75?-.17+(rp-.55)/.2*.17:0;if(rp>.83&&rp<.87)sl=(rp-.83)/.04*.03;else if(rp>=.87&&rp<.91)sl=.03*(1-(rp-.87)/.04)}
-else if(inv.mag===0&&P.rc<.05)sl=.026;
-gun.position.set(GB[0]+gsx+Math.sin(P.bob*.5)*.006,GB[1]+gsy-P.rc*.012-tilt*.03+Math.abs(Math.sin(P.bob))*.006,GB[2]+P.rc*.05);
-gun.rotation.set(P.rc*.16+tilt*.12,.05,tilt*.5);pistol.position.z=P.rc*.02;pistol.rotation.x=P.rc*.1;slide.position.z=P.rc*.024+sl;mag.position.y=-.0135+mg;mag.visible=mg>-.15;if(P.smk>0){P.smk-=dt;P.smkT=(P.smkT||0)-dt;if(P.smkT<=0){P.smkT=.1;ev1.set(0,.0215,-.2);pistol.localToWorld(ev1);puff(ev1,(R()-.5)*.08,.22,(R()-.5)*.08,.03,.14,1.1,.17)}}}
+let tilt=0,sl=0,lift=0;const rp=P.rl>0?1-P.rl/1.6:-1;
+if(rp>=0){const sg=(x0,x1)=>cl((rp-x0)/(x1-x0),0,1),eio=t=>t*t*(3-2*t),ein=t=>t*t;
+/* 1. cant the pistol toward the body, then 4. bring it back level */
+tilt=eio(sg(0,.12))*(1-eio(sg(.84,.97)));
+/* 2. mag release at .17: the old magazine drops out along its own raked axis and falls to the floor */
+const out=.19*ein(sg(.17,.29));
+if(rp<.27){mag.visible=true;mag.position.set(0,-.0135+MD[1]*out,-.0309+MD[2]*out)}
+else if(!GRL.d){GRL.d=1;mag.visible=true;mag.position.set(0,-.0135+MD[1]*out,-.0309+MD[2]*out);mag.updateWorldMatrix(true,false);dropMag();mag.visible=false}
+else if(rp<.76)mag.visible=false;
+/* 3. support hand dips to the belt, grabs a fresh magazine (.40), brings it up and seats it */
+let hx=0,hy=0,hz=0;const c=[0,.0215,-.0309],W0=[0,-.0135,-.0309];
+if(rp<.40){const u=eio(sg(.06,.40));hx=-.10*u;hy=-.20*u;hz=.09*u;nmag.visible=false}
+else if(rp<.76){nmag.visible=true;let dist,x;
+if(rp<.58){const u=eio(sg(.40,.58));dist=.19;x=-.10+(-.035+.10)*u;const ly=-.1785,ay=W0[1]+MD[1]*.19,lz=.0591,az=W0[2]+MD[2]*.19;nmag.position.set(x,ly+(ay-ly)*u,lz+(az-lz)*u);nmag.rotation.set(-.203-.35,0,.25*(1-u))}
+else{const u=rp<.72?eio(sg(.58,.72))*.9:.9+ein(sg(.72,.76))*.1;dist=.19*(1-u);x=-.035*(dist/.19);nmag.position.set(x,W0[1]+MD[1]*dist,W0[2]+MD[2]*dist);nmag.rotation.set(-.203-.35*(dist/.19),0,0)}
+hx=nmag.position.x-c[0];hy=nmag.position.y-c[1];hz=nmag.position.z-c[2]}
+else{if(!GRL.s){GRL.s=1;nmag.visible=false;mag.visible=true;mag.position.set(0,W0[1],W0[2]);shake=Math.max(shake,.04)}
+const u=eio(sg(.76,.88));hx=0;hy=-.035*(1-u);hz=0;lift=.007*(1-eio(sg(.76,.82)))}
+GM.lh.position.set(hx,hy,hz);
+/* 5. empty reload: slide is locked back until the thumb hits the slide stop, then it slams forward */
+if(GRL.e){sl=rp<.80?SLT:rp<.83?SLT*(1-ein(sg(.80,.83))):0}}
+else{mag.visible=true;mag.position.set(0,-.0135,-.0309);nmag.visible=false;GM.lh.position.set(0,0,0);
+if(inv.mag===0&&P.rc<.05)sl=SLT}
+{const a=ADSk,fa=1-a*.8,tt=performance.now()*.001,br=Math.sin(tt*1.3)*.0016*fa,bw=Math.sin(tt*.9)*.0012*fa;
+gun.position.set(lp(GB[0]+gsx+Math.sin(P.bob*.5)*.006*fa+bw,0,a),lp(GB[1]+gsy+lift-tilt*.03+Math.abs(Math.sin(P.bob))*.006*fa+br-SPk*.05,-.0665+gsy*.4,a)-P.rc*.012,lp(GB[2]+SPk*.03,-.36,a)+P.rc*.05);
+gun.rotation.set(P.rc*.16+tilt*.12+SPk*.3,.05*(1-a)-SPk*.25,tilt*.42+SPk*.18)}pistol.position.z=P.rc*.02;pistol.rotation.x=P.rc*.1;{const kk=1-P.rc,sk=P.rc>0?(kk<.18?kk/.18:Math.pow(1-(kk-.18)/.82,1.6))*SLT:0;slide.position.z=sk+sl;GM.trg.position.z=cl((P.rc-.35)*3,0,1)*.006}if(P.smk>0){P.smk-=dt;P.smkT=(P.smkT||0)-dt;if(P.smkT<=0){P.smkT=.1;ev1.set(0,.0215,-.2);pistol.localToWorld(ev1);puff(ev1,(R()-.5)*.08,.22,(R()-.5)*.08,.03,.14,1.1,.17)}}}
 /* ejected brass */
 const casM=new T.MeshStandardMaterial({color:0xc9a23c,metalness:.9,roughness:.3,envMap:envT}),cas=[];for(let i=0;i<6;i++){const m=new T.Mesh(new T.LatheGeometry([[0,0],[.0052,0],[.0052,.0007],[.0047,.0009],[.0047,.0145],[.0041,.0165],[.0034,.0185],[.0032,.0195]].map(p=>new T.Vector2(p[0],p[1])),10).translate(0,-.0098,0),casM);m.visible=false;scene.add(m);cas.push({m,v:new T.Vector3(),t:0})}let ci=0;const ev1=new T.Vector3(),ev2=new T.Vector3();
 function eject(){const c=cas[ci++%6];ev1.set(.012,.03,-.04);pistol.localToWorld(ev1);c.m.position.copy(ev1);ev2.set(1,0,0).applyQuaternion(cam.quaternion);c.v.copy(ev2).multiplyScalar(1.5+R()*.8);ev2.set(0,1,0);c.v.addScaledVector(ev2,1.6+R()*.8);ev2.set(0,0,1).applyQuaternion(cam.quaternion);c.v.addScaledVector(ev2,.5+R()*.4);c.t=4;c.m.visible=true;c.m.rotation.set(R()*3,R()*3,R()*3)}
@@ -482,7 +522,7 @@ function burst(p,n,sp){for(let i=0,k=0;i<PN&&k<n;i++)if(pt[i]<=0){pt[i]=.3+R()*.
 const SM=[];for(let i=0;i<48;i++){const m=new T.SpriteMaterial({map:TX.smoke,color:0x8a8a8a,transparent:true,opacity:0,depthWrite:false});const s=new T.Sprite(m);s.visible=false;scene.add(s);SM.push({s,m,v:new T.Vector3(),t:0,l:1,sz:.1,gr:.3,o:.3})}let smi=0;
 function puff(p,vx,vy,vz,sz,gr,life,op,col){const q=SM[smi++%48];q.m.color.setHex(col||0x8a8a8a);q.s.position.copy(p);q.v.set(vx,vy,vz);q.t=q.l=life;q.sz=sz;q.gr=gr;q.o=op;q.s.visible=true;q.s.scale.set(sz,sz,1);q.m.rotation=R()*6.28}
 function smokeUpd(dt){for(const q of SM){if(q.t<=0)continue;q.t-=dt;if(q.t<=0){q.s.visible=false;continue}const k=1-q.t/q.l;q.s.position.addScaledVector(q.v,dt);q.v.multiplyScalar(Math.max(0,1-dt*1.3));q.v.y+=dt*.1;const sz=q.sz+q.gr*k;q.s.scale.set(sz,sz,1);q.m.opacity=q.o*Math.min(1,k*8)*(1-k)}}
-function muzzleFx(){ev1.set(0,.0215,-.205);pistol.localToWorld(ev1);ev2.set(0,0,-1).applyQuaternion(cam.quaternion);const dx=ev2.x,dy=ev2.y,dz=ev2.z;burst(ev1,9,2.4);
+function muzzleFx(){ev1.set(0,.0215,-.196);pistol.localToWorld(ev1);ev2.set(0,0,-1).applyQuaternion(cam.quaternion);const dx=ev2.x,dy=ev2.y,dz=ev2.z;burst(ev1,9,2.4);
 for(let i=0;i<6;i++)puff(ev1,dx*(1.1+R()*1.6)+(R()-.5)*.5,dy*1.1+.2+R()*.3,dz*(1.1+R()*1.6)+(R()-.5)*.5,.08,.4+R()*.3,1.3+R()*1,.32);
 ev1.set(.016,.03,-.07);pistol.localToWorld(ev1);for(let i=0;i<2;i++)puff(ev1,.25+R()*.2,.3,.1,.04,.2,1,.2);P.smk=1.8}
 const BN=260,bgm=new T.BufferGeometry(),bp=new Float32Array(BN*3),bsz=new Float32Array(BN),bv=[],bt=new Float32Array(BN);bgm.setAttribute('position',new T.BufferAttribute(bp,3));bgm.setAttribute('sz',new T.BufferAttribute(bsz,1));
@@ -1192,7 +1232,7 @@ const cuff=new T.Mesh(new T.CylinderGeometry(.0385,.0345,.075,18),lea);cuff.quat
 const st=new T.Mesh(new T.CylinderGeometry(.0395,.0395,.022,18),strap);st.quaternion.copy(q0);st.position.copy(wr).addScaledVector(dir,.048);g.add(st);
 const sl=new T.Mesh(new T.CylinderGeometry(.058,.045,.6,18),slv);sl.quaternion.copy(q0);sl.position.copy(wr).addScaledVector(dir,.37);g.add(sl);
 g.scale.setScalar(1.25);g.position.set(-.2,-.235,-.4);g.rotation.set(.1,-.08,.03);cam.add(g);TORCH={g,lens:l,led,gl,tk:0,on:false}}
-function updTorch(dt){if(!fl.own)return;if(!TORCH)mkTorch();const q=TORCH,vis=!P.hid&&!(P.sr>0)&&!(P.dg>0)&&!P.cb&&G.st==='play';q.g.visible=vis;if(!vis)return;if(q.on!==fl.on){q.on=fl.on;q.tk=1}q.tk=lp(q.tk,0,Math.min(1,dt*7));const b=Math.sin(P.bob)*.004,sw=Math.cos(P.bob*.5)*.003,sp=P.spr?-.02:0;q.g.position.set(-.2+sw,-.235+b+sp-q.tk*.02,-.4+q.tk*.02);q.g.rotation.set(.1+q.tk*.12,-.08,.03);q.lens.material.emissiveIntensity=fl.on?3:0;q.lens.material.opacity=fl.on?.85:.28;q.led.material.color.setHex(fl.on?0xffffff:0x2a2a2a);q.gl.material.opacity=fl.on?.55:0}
+function updTorch(dt){if(!fl.own)return;if(!TORCH)mkTorch();const q=TORCH,vis=!P.hid&&!(P.sr>0)&&!(P.dg>0)&&!P.cb&&!(P.rl>0&&held==='gun')&&G.st==='play';q.g.visible=vis;if(!vis)return;if(q.on!==fl.on){q.on=fl.on;q.tk=1}q.tk=lp(q.tk,0,Math.min(1,dt*7));const b=Math.sin(P.bob)*.004,sw=Math.cos(P.bob*.5)*.003,sp=P.spr?-.02:0;q.g.position.set(-.2+sw,-.235+b+sp-q.tk*.02,-.4+q.tk*.02);q.g.rotation.set(.1+q.tk*.12,-.08,.03);q.lens.material.emissiveIntensity=fl.on?3:0;q.lens.material.opacity=fl.on?.85:.28;q.led.material.color.setHex(fl.on?0xffffff:0x2a2a2a);q.gl.material.opacity=fl.on?.55:0}
 const zoneAt=(x,z)=>x>=-14.2&&x<-10&&z>=8&&z<=14.2?'hid':x>=-10&&x<-2&&z<3?'bed':x>=-10&&x<-2&&z<=16?'lib':x>=2&&x<=12.2&&z<3?'din':x>=2&&x<=10.2&&z<=14.2?'sto':x>-2&&x<2?'hall':'x';
 function useBand(){if(G.st!=='play'&&G.st!=='inv')return;if(!(inv.band>0)){msg('You have no bandages.');return}if(P.hp>=100){msg('You are not hurt.');return}inv.band--;P.hp=Math.min(100,P.hp+40);A.rustle();A.pick();msg('Bandage applied. +40 health ('+inv.band+' left)')}
 function drwUse(o){o.open=!o.open;A.creak();if(o.open&&!o.looted){o.looted=true;const z=zoneAt(o.x0,o.z0);setTimeout(()=>{const r=R();if(!BONUS.has(z)&&r<.3){BONUS.add(z);if(r<.2){const n=2+(R()*2|0);inv.res+=n;A.pick();msg('Found: '+n+' pistol rounds'+(inv.gun?'':' (you have no pistol yet)'))}else{inv.band=(inv.band||0)+1;A.pick();msg('Found: a bandage. Press H or open the inventory (Tab) to use it.')}}else{A.rustle();msg(['Empty.','Only dust and moth wings.','A few rusty pins.'][R()*3|0])}},450)}}
@@ -1511,15 +1551,18 @@ function die(){if(P.dead)return;P.dead=1;P.hid=null;P.hd=false;$('hide').classNa
 function escape(){G.st='won';$('fade').style.background='#fff';$('fade').style.opacity=1;A.unlock();if(document.pointerLockElement)document.exitPointerLock();setTimeout(()=>{showWin();$('hud').classList.remove('on');$('fade').style.opacity=0},2600)}
 /* ================= WEAPON ================= */
 const rc=new T.Raycaster();
-function fire(){if(!inv.gun||held!=='gun'||P.sr>0||P.hm>0||P.dg>0||P.rl>0||P.fc>0||P.cb||P.hid||JS.on||SCX.on)return;if(inv.mag<=0){A.click();msg('Empty. Press R to reload.',1500);return}
-inv.mag--;P.fc=.45;A.shot();P.rc=1;shake+=.12;mfT=.06;mf.visible=true;mf.rotation.z=R()*6;mf.scale.setScalar(.8+R()*.6);mfl.intensity=3;eject();muzzleFx();noiseEv(38);
-const o=cam.position.clone(),d=new T.Vector3();cam.getWorldDirection(d);rc.set(o,d);rc.far=40;const hs=rc.intersectObjects(solids,false),wd=hs.length?hs[0].distance:40;let done=false;
+function fire(){if(!inv.gun||held!=='gun'||P.sr>0||P.hm>0||P.dg>0||P.rl>0||P.fc>0||P.cb||P.hid||JS.on||SCX.on)return;if(inv.mag<=0){A.dry();msg('Empty. Press R to reload.',1500);return}
+inv.mag--;P.fc=.18;A.shot();P.rc=1;shake+=.12;mfT=.06;mf.visible=true;mf.rotation.z=R()*6;mf.scale.setScalar(.8+R()*.6);mfl.intensity=3;eject();muzzleFx();noiseEv(38);
+{const k=(.035+R()*.012)*(1-ADSk*.3);P.pitch=cl(P.pitch+k,-1.4,1.4);P.yaw+=(R()-.5)*.012;P.kick=(P.kick||0)+k}
+const o=cam.position.clone(),d=new T.Vector3();cam.getWorldDirection(d);
+{const mvs=Math.hypot(P.vx||0,P.vz||0),sp=(.004+Math.min(mvs,5.2)*.0035+(P.spr?.012:0)+(P.bl||0))*(P.cr?.6:1)*(1-ADSk*.6);P.bl=Math.min(.03,(P.bl||0)+.008);const aa=R()*6.283,rr=Math.sqrt(R())*sp,rt=new T.Vector3().setFromMatrixColumn(cam.matrixWorld,0),up=new T.Vector3().setFromMatrixColumn(cam.matrixWorld,1);d.addScaledVector(rt,Math.cos(aa)*rr).addScaledVector(up,Math.sin(aa)*rr).normalize()}
+rc.set(o,d);rc.far=40;const hs=rc.intersectObjects(solids,false),wd=hs.length?hs[0].distance:40;let done=false;
 if(gh.vis&&gh.lvl===P.lvl&&gh.st!=='kill'&&gh.st!=='gone')for(const [y,r,dm] of [[1.85,.2,45],[1.3,.38,25]]){const v=new T.Vector3(gh.x,y,gh.z).sub(o),t=v.dot(d);if(t>0&&t<wd){const pr=v.sub(d.clone().multiplyScalar(t)).length();if(pr<r){hitGhost(dm,new T.Vector3(gh.x,y,gh.z),d.clone(),hs.length?hs[0]:null);done=true;break}}}
-if(!done&&hs.length){burst(hs[0].point,12,3);const h=new T.Mesh(new T.CircleGeometry(.04,6),new T.MeshBasicMaterial({color:0x000000}));h.position.copy(hs[0].point).addScaledVector(hs[0].face.normal,.01);h.lookAt(h.position.clone().add(hs[0].face.normal));W.add(h)}
+if(!done&&hs.length){burst(hs[0].point,12,3);puff(hs[0].point,0,.15,0,.1,.45,.9,.22,0x9a948a);A.n(.08,4500,900,.22,'bandpass');const h=new T.Mesh(new T.CircleGeometry(.04,6),new T.MeshBasicMaterial({color:0x000000}));h.position.copy(hs[0].point).addScaledVector(hs[0].face.normal,.01);h.lookAt(h.position.clone().add(hs[0].face.normal));W.add(h)}
 if(inv.mag===0&&inv.res>0)msg('Reload: R',1500)}
 function hitGhost(dm,p,d,wp){burst(p,5,2);bloodHit(p,d,wp,38);ghostHitFx(dm,d);gh.hp-=dm;if(gh.hp<=0){gh.st='gone';gh.t=45;gh.vis=false;burst(new T.Vector3(gh.x,1.2,gh.z),60,6);bloodHit(new T.Vector3(gh.x,1.2,gh.z),d,null,95);msg('She dissolves. She will return.');return}
 if(gh.st!=='stagger'){gh.st='stagger';gh.t=2.4}else gh.t=Math.min(3,gh.t+.7);gh.vis=true;const fx=Math.sin(P.yaw),fz=Math.cos(P.yaw);mv(gh,-fx*.7,-fz*.7,.4)}
-function reload(){if(!inv.gun||held!=='gun'||P.rl>0||inv.mag>=6||inv.res<=0)return;P.rl=1.6;A.reload()}
+function reload(){if(!inv.gun||held!=='gun'||P.rl>0||inv.mag>=6||inv.res<=0)return;P.rl=1.6;A.reload();GRL.e=inv.mag===0;GRL.d=0;GRL.s=0}
 function noiseEv(r){P.ev=Math.max(P.ev||0,r)}
 /* ================= INPUT ================= */
 let MOB=false,JX=0,JY=0;
@@ -1586,8 +1629,8 @@ if(G.st==='read'&&(e.code==='KeyE'||e.code==='Escape')){$('read').classList.remo
 if(G.st!=='play')return;if(e.code==='KeyE')interact();if(e.code==='KeyF'&&fl.own&&!P.hid){fl.on=!fl.on;A.click();if(fl.on)lightScareMaybe()}if(e.code==='KeyR')reload();if(e.code==='Digit1')setHeld('gun');if(e.code==='Digit2')setHeld('hammer');if(e.code==='Digit3')setHeld('shovel');if(e.code==='KeyQ')swapHeld();if(e.code==='Tab')openInv();if(e.code==='KeyC')P.cr=!P.cr});
 addEventListener('keyup',e=>K[e.code]=0);
 addEventListener('mousemove',e=>{if(G.st==='play'&&!MOB&&document.pointerLockElement)lookBy(e.movementX*.0022,e.movementY*.0022)});
-addEventListener('mousedown',e=>{if(MOB)return;if(G.st==='play'&&document.pointerLockElement&&e.button===0)fire();else if(G.st==='play'&&!document.pointerLockElement)lock()});
-addEventListener('contextmenu',e=>e.preventDefault());
+addEventListener('mousedown',e=>{if(MOB)return;if(e.button===2)ADSw=true;if(G.st==='play'&&document.pointerLockElement&&e.button===0)fire();else if(G.st==='play'&&!document.pointerLockElement)lock()});
+addEventListener('contextmenu',e=>e.preventDefault());addEventListener('mouseup',e=>{if(e.button===2)ADSw=false});addEventListener('blur',()=>{ADSw=false});
 document.addEventListener('pointerlockchange',()=>{if(!document.pointerLockElement&&G.st==='play'&&!MOB)pauseG()});
 function pauseG(){if(G.st!=='play')return;G.st='pause';$('pause').classList.add('on')}
 $('bStart').onclick=beginGame;$('intro').onclick=introDone;$('bSet').onclick=()=>$('sett').classList.add('on');$('bSetBack').onclick=()=>$('sett').classList.remove('on');
@@ -1687,9 +1730,9 @@ hbT-=dt;if(tn>.3&&hbT<=0){A.heart();hbT=lp(1.2,.45,tn)}
 if(gh.vis&&gh.lvl===P.lvl&&gh.st!=='gone'&&gh.st!=='dormant'&&!dying){A.pos(gh.x,1.3,gh.z);gsT-=dt;if(gh.mvg&&gsT<=0){A.gstep();gsT=gh.spd>2.5?.4:.85}const gd_=H(P.x-gh.x,P.z-gh.z);gbT-=dt;if(gbT<=0){if(gd_<9)A.breath();gbT=3+R()*3}gwT-=dt;if(gwT<=0){if(gd_<11)A.whisper();gwT=8+R()*8}}
 /* camera */
 shake=Math.max(0,shake-dt*.9);const sh=shake*(shake>.01?1:0);cam.position.set(P.x+rnd()*sh*.12-Math.sin(P.yaw)*.14*SL,P.y+rnd()*sh*.12-.17*SL+Math.sin(performance.now()/1000*8.5)*.01*SL,P.z+rnd()*sh*.12-Math.cos(P.yaw)*.14*SL);cam.rotation.set(P.pitch+rnd()*sh*.06+(dying?.0:0),P.yaw+rnd()*sh*.06,(dying?.25:0)+rnd()*sh*.05+Math.sin(performance.now()/300)*.012*SL);
-cam.fov=lp(cam.fov,70+tn*7+SCX.fov+(gh.st==='stare'?-6:0)+(JS.on?(JS.t<.3?24:14):0),JS.on?.35:.1);cam.updateProjectionMatrix();A.lis(cam);srPose();shvPose();
+cam.fov=lp(cam.fov,70+tn*7-ADSk*8+SCX.fov+(gh.st==='stare'?-6:0)+(JS.on?(JS.t<.3?24:14):0),JS.on?.35:.1);cam.updateProjectionMatrix();A.lis(cam);srPose();shvPose();
 /* weapon */
-P.rc=Math.max(0,P.rc-dt*7);gunUpd(dt);casUpd(dt);
+P.rc=Math.max(0,P.rc-dt*7);P.bl=Math.max(0,(P.bl||0)-dt*.03);if(P.kick>0&&G.st==='play'){const r=Math.min(P.kick,dt*.09);P.kick-=r;P.pitch-=r*.8}gunUpd(dt);casUpd(dt);
 if(mfT>0){mfT-=dt;if(mfT<=0){mf.visible=false;mfl.intensity=0}}
 /* particles */
 for(let i=0;i<PN;i++){if(pt[i]>0){pt[i]-=dt;pv[i].y-=6*dt;pp[i*3]+=pv[i].x*dt;pp[i*3+1]+=pv[i].y*dt;pp[i*3+2]+=pv[i].z*dt}else pp[i*3+1]=-99}pg.attributes.position.needsUpdate=true;fxUpd(dt);genUpd(dt);
