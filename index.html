@@ -127,14 +127,14 @@ body.mob #inv{top:70px;right:80px}
 <p class="row">Changing graphics reloads the page. The game also lowers its render resolution on its own if your device struggles.</p>
 <button id="bSetBack">Back</button></div>
 <div class="scr" id="intro"><div id="introt"></div><div class="hint">CLICK OR PRESS ENTER TO SKIP</div></div>
-<div class="scr" id="ctrl"><h2>Controls</h2><table>
+<div class="scr" id="ctrl"><h2>Controls</h2><div class="mobhelp"><b>LEFT THUMB</b> Drag to move. Push to the edge to run.<br><b>RIGHT THUMB</b> Drag to look.<br><b>USE</b> appears only when there is something to use, and names the action.<br><b>FIRE</b> appears only while the pistol is equipped. Tap its slot (top right) to equip or holster it.<br><b>QUICK SLOTS</b> Flashlight, pistol, hammer, shovel, bandage: only what you own. Tap to switch on, equip or use.<br><b>ITEMS</b> Keys, notes and artifacts.<br><b>SNEAK</b> Toggle quiet walking.<br><b>HOLD BREATH</b> Press and hold while hiding.</div><table>
 <tr><td>W A S D</td><td>Move</td></tr><tr><td>Mouse</td><td>Look (click to capture)</td></tr><tr><td>Shift</td><td>Sprint (drains stamina, loud)</td></tr>
 <tr><td>Ctrl or C</td><td>Crouch / sneak (quiet)</td></tr><tr><td>E</td><td>Interact, pick up, open doors, climb ladders, read</td></tr><tr><td>F</td><td>Flashlight</td></tr>
 <tr><td>Left click</td><td>Fire pistol</td></tr><tr><td>Right mouse (hold)</td><td>Aim down the sights: steadier, tighter shots</td></tr><tr><td>R</td><td>Reload</td></tr><tr><td>E (near a closet / bed)</td><td>Hide. Hold SPACE to hold your breath while she searches</td></tr><tr><td>1 / 2 / 3 / Q</td><td>Equip pistol / hammer / shovel / cycle</td></tr><tr><td>E at a grave</td><td>Examine it, or dig it up with the shovel</td></tr><tr><td>Digital lock</td><td>Type digits or click keys, Enter to confirm</td></tr><tr><td>E at boarded planks</td><td>Swing the hammer (3 hits break them)</td></tr><tr><td>E at a mango crate</td><td>Search it (once)</td></tr><tr><td>Tab</td><td>Inventory</td></tr><tr><td>Esc</td><td>Pause</td></tr></table><p class="row">Phone / tablet: left thumb moves, right thumb looks, on-screen buttons do the rest. Switch to touch controls in Settings on any device.</p>
 <p>She hears running and gunfire, and she sees your light. Staggering her buys time; it does not end her.</p><button id="bBack">Back</button></div>
 <div class="scr" id="pause"><h2>Paused</h2><button id="bRes">Resume</button><button id="bRst">Restart</button>
 <div class="row">Volume<input type="range" class="vol" min="0" max="1" step=".05" value=".7">Mute<input type="checkbox" class="mute"> Brightness<input type="range" class="bri" min=".4" max="1.6" step=".05" value=".85"></div></div>
-<div class="scr" id="read"><div id="note"></div><p class="row">Press E (or tap) to put it down</p></div>
+<div class="scr" id="read"><div id="note"></div><p class="row"><span class="pcOnly">Press E (or tap)</span><span class="mobOnly">Tap</span> to put it down</p></div>
 <div class="scr" id="dead"><h1>SHE FOUND YOU</h1><p>The house keeps what it takes.</p><button id="bRetry">Try again</button></div>
 <div class="scr" id="win"><h1 style="color:#c9bdae">OUT</h1><p>The padlock falls open and the gate swings wide. Behind you, the house is silent. For now.</p><p class="row" id="wst"></p><div><button id="bWinCred">Credits</button><button id="bAgain">Play again</button></div></div>
 <div class="scr" id="load"><div class="eyebrow">VOSS MANSION &middot; 1893</div><h2 style="color:#8a1c1c">Opening the doors&hellip;</h2><div class="lb"><i></i></div><p id="loadt"></p></div>
@@ -143,9 +143,28 @@ body.mob #inv{top:70px;right:80px}
 <div class="kpFt">Keyboard digits work too &middot; Backspace clears &middot; Esc steps away</div><button id="kpX">Step away</button></div></div>
 <div class="scr" id="cred"><div id="credFace"></div><div id="credFog"></div><i class="drip" style="left:9%;animation-delay:.6s"></i><i class="drip" style="left:23%;animation-delay:3.1s"></i><i class="drip" style="left:47%;animation-delay:1.7s"></i><i class="drip" style="left:68%;animation-delay:4.4s"></i><i class="drip" style="left:86%;animation-delay:2.3s"></i>
 <div id="credBox"><h2 id="credT"><span class="a">SPECIAL SHOUT-OUT TO </span><span id="credNm">master_yt069</span><span class="c"> — PLANNER OF THE GAME</span></h2><p class="cr-sub">The house remembers everyone who came to plan its rooms.</p><button id="bCredBack">Back</button></div></div>
+<style>
+:root{--sr:env(safe-area-inset-right,0px);--sl:env(safe-area-inset-left,0px);--sb:env(safe-area-inset-bottom,0px)}
+#mctl #mtop{position:absolute;right:calc(var(--sr) + 10px);top:10px;display:flex;gap:8px;pointer-events:none}
+#mctl #mtop .mb{position:static;width:44px;height:44px;font-size:9px;letter-spacing:.5px}
+#mctl #hotbar{position:absolute;right:calc(var(--sr) + 10px);top:64px;display:flex;gap:8px;pointer-events:none}
+#mctl .hb{pointer-events:auto;touch-action:none;position:relative;width:48px;height:48px;padding:7px;margin:0;border-radius:12px;background:rgba(20,10,10,.55);border:2px solid rgba(190,170,150,.4);-webkit-user-select:none}
+#mctl .hb svg{width:100%;height:100%;pointer-events:none}#mctl .hb b{position:absolute;right:3px;bottom:1px;font:bold 10px Georgia,serif;color:#e8dcc4;text-shadow:0 0 3px #000;pointer-events:none}
+#mctl .hb.eq{border-color:#d6b05a;background:rgba(80,56,14,.7)}#mctl .hb.on{border-color:#f0e4a0;box-shadow:0 0 12px rgba(240,228,160,.45)}#mctl .hb.dim{opacity:.45}
+#mctl #bFire{right:calc(var(--sr) + 22px);bottom:calc(var(--sb) + 26px);width:92px;height:92px}
+#mctl #bUse{right:calc(var(--sr) + 22px);bottom:calc(var(--sb) + 28px);width:84px;height:84px}
+body.armed #mctl #bUse,body.hid #mctl #bUse{right:calc(var(--sr) + 126px);bottom:calc(var(--sb) + 30px);width:76px;height:76px}
+#mctl #bRel{right:calc(var(--sr) + 36px);bottom:calc(var(--sb) + 128px);width:60px;height:60px}
+#mctl #bBr{right:calc(var(--sr) + 22px);bottom:calc(var(--sb) + 26px);width:92px;height:92px;display:none}body.hid #mctl #bBr{display:block}
+#tzL{left:var(--sl);width:calc(42% - var(--sl))}
+.mobhelp{display:none;text-align:left;max-width:520px;margin:0 auto 10px;font-size:15px;line-height:1.7;color:#b9aea0}.mobhelp b{color:#e0d2bc;font-weight:400;letter-spacing:1px}body.mob .mobhelp{display:block}body.mob #ctrl table{display:none}
+.mobOnly{display:none}body.mob .mobOnly{display:inline}body.mob .pcOnly{display:none}
+body.mob #ixa{min-height:46px;font-size:16px}
+@media(max-height:520px) and (orientation:landscape){#ix{padding:8px 10px}#ixb{flex-direction:row!important;gap:10px;width:96vw}#ixl{flex:1.4}#ixg,#ixs2{grid-template-columns:repeat(5,1fr)!important;gap:5px}#ixr{position:sticky!important;top:0;width:auto!important;padding:10px}#ixd h3{font-size:18px}#ixd p{margin:6px 0;font-size:13px}#ix h2{font-size:18px;margin:0}.ixs{margin:6px 0 4px}}
+</style>
 <div id="mctl"><div id="tzL"><div id="joy"><div id="knob"></div></div></div><div id="tzR"></div>
-<button class="mb" id="bFire">FIRE</button><button class="mb" id="bUse">USE</button><button class="mb sm" id="bRel">RELOAD</button><button class="mb sm" id="bHl">HEAL</button><button class="mb sm" id="bFl">LIGHT</button>
-<button class="mb sm" id="bPz">PAUSE</button><button class="mb sm" id="bCr">SNEAK</button><button class="mb sm" id="bIv">ITEMS</button><button class="mb sm" id="bSw">SWAP</button><button class="mb" id="bBr">HOLD<br>BREATH</button></div>
+<div id="mtop"><button class="mb sm" id="bCr">SNEAK</button><button class="mb sm" id="bIv">ITEMS</button><button class="mb sm" id="bPz">PAUSE</button></div><div id="hotbar"></div>
+<button class="mb" id="bFire">FIRE</button><button class="mb" id="bUse">USE</button><button class="mb sm" id="bRel">RELOAD</button><button class="mb" id="bBr">HOLD<br>BREATH</button></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function(){
@@ -804,7 +823,8 @@ add(new T.CylinderGeometry(.095,.26,.2,20,1,true),new T.MeshStandardMaterial({co
 return l}
 function decal(m,x,z,s,ry,y){const d=new T.Mesh(new T.PlaneGeometry(s,s),new T.MeshBasicMaterial({map:m,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));d.rotation.x=-PI/2;d.rotation.z=ry||0;d.position.set(x,y||.02,z);W.add(d)}
 function web(x,y,z,ry){const w=new T.Mesh(new T.PlaneGeometry(1.1,1.1),new T.MeshBasicMaterial({map:TX.web,transparent:true,side:T.DoubleSide,depthWrite:false}));w.position.set(x,y,z);w.rotation.y=ry;W.add(w)}
-const msg=(t,ms)=>{const e=$('msg');e.textContent=t;e.style.opacity=1;clearTimeout(msg.t);msg.t=setTimeout(()=>e.style.opacity=0,ms||3200)};
+function mt(t){if(!document.body.classList.contains('mob'))return t;return String(t).replace(/Press HOLD BREATH/g,'Hold the BREATH button').replace(/Press H or open the inventory \(Tab\) to use it\./g,'Tap the bandage slot to use it.').replace(/Press H to use one without opening the inventory\./g,'Tap the bandage slot to use one.').replace(/Reload: R/g,'Tap RELOAD').replace(/Press R to reload\.?/g,'Tap RELOAD.').replace(/Press F\.?/g,'Tap the flashlight slot.').replace(/Press E\b/g,'Tap USE')}
+const msg=(t,ms)=>{const e=$('msg');e.textContent=mt(t);e.style.opacity=1;clearTimeout(msg.t);msg.t=setTimeout(()=>e.style.opacity=0,ms||3200)};
 const obj=t=>{$('objt').textContent=t};
 function addInt(x,y,z,label,fn,mesh,r){const it={p:new T.Vector3(x,y,z),label,fn,r:r||2.3,mesh};if(mesh){mesh.userData.dyn=1;mesh.position.set(x,y,z);W.add(mesh)}ints.push(it);return it}
 function take(it){it.done=true;if(it.mesh)W.remove(it.mesh)}
@@ -1835,9 +1855,15 @@ function applyCtl(v){MOB=v==='mob'||(v==='auto'&&mobLike);document.body.classLis
 const MV=['take','open','close','search','hide','read','use','examine','place','unlock','break','dig','climb','pull','push','enter','leave','start','flip','insert','offer','check','grab'];
 function mobUI(){if(!MOB)return;const hidOn=!!(P.hid&&P.hs==='on'),lb=cur?(typeof cur.label==='function'?cur.label():cur.label):'',w0=(lb.replace(/^!/,'').split(/[ ,(]/)[0]||'').toLowerCase(),
 verb=hidOn?'LEAVE':!lb?'':(lb[0]==='!'||/locked\)/.test(lb))?'TRY':(MV.indexOf(w0)>=0?w0.toUpperCase():'USE'),
-gunOn=!!(inv.gun&&held==='gun'&&!P.hid),rel=gunOn&&inv.res>0&&inv.mag<6,heal=(inv.band>0&&P.hp<100)?inv.band:0,hn=(inv.gun?1:0)+(inv.hammer?1:0)+(inv.shovel?1:0),sw=hn>1&&!P.hid,key=[verb,gunOn,rel,heal,fl.own,sw].join('|');
-if(key===mu)return;mu=key;const sh=(id,on,t)=>{const e=$(id);e.style.display=on?'block':'none';if(on&&t)e.textContent=t};
-sh('bUse',!!verb,verb);sh('bFire',gunOn);sh('bRel',rel);sh('bHl',!!heal,'HEAL x'+heal);sh('bFl',fl.own);sh('bSw',sw)}
+gunOn=!!(inv.gun&&held==='gun'&&!P.hid),rel=gunOn&&inv.res>0&&inv.mag<6,hs=[];
+if(!hidOn){if(fl.own)hs.push({k:'fl',ic:IC.light,on:fl.on});if(inv.gun)hs.push({k:'gun',ic:IC.gun,b:inv.mag+'/'+inv.res,eq:held==='gun'});if(inv.hammer)hs.push({k:'ham',ic:IC.hammer,eq:held==='hammer'});if(inv.shovel)hs.push({k:'shv',ic:IC.shovel,eq:held==='shovel'});if(inv.band>0)hs.push({k:'bnd',ic:IC.band,b:'x'+inv.band,dim:P.hp>=100})}
+const key=[verb,gunOn,rel,hidOn,hs.map(h=>h.k+(h.on?1:0)+(h.eq?1:0)+(h.dim?1:0)+(h.b||'')).join(',')].join('|');
+if(key===mu)return;mu=key;document.body.classList.toggle('armed',gunOn);
+const sh=(id,on,t)=>{const e=$(id);e.style.display=on?'block':'none';if(on&&t)e.textContent=t};sh('bUse',!!verb,verb);sh('bFire',gunOn);sh('bRel',rel);
+const hb=$('hotbar');hb.innerHTML='';hs.forEach(h=>{const e=document.createElement('button');e.className='hb'+(h.eq?' eq':'')+(h.on?' on':'')+(h.dim?' dim':'');e.innerHTML=h.ic+(h.b?'<b>'+h.b+'</b>':'');
+e.addEventListener('touchstart',ev=>{ev.preventDefault();ev.stopPropagation();try{navigator.vibrate&&navigator.vibrate(10)}catch(x){}hbUse(h.k)},{passive:false});hb.appendChild(e)})}
+/* quick slots: tap to switch the light, equip / holster a tool, or use a bandage */
+function hbUse(k){if(G.st!=='play')return;if(k==='fl'){if(fl.own&&!P.hid){fl.on=!fl.on;A.click();if(fl.on)lightScareMaybe()}}else if(k==='bnd')useBand();else{const m={gun:'gun',ham:'hammer',shv:'shovel'}[k];setHeld(held===m?null:m)}mu=''}
 applyCtl(lsGet('hb_ctl','auto'));
 
 /* ================= INVENTORY (Tab) ================= */
@@ -1856,12 +1882,13 @@ ammo:S('<path d="M16 50V24l5-8 5 8v26zM30 50V24l5-8 5 8v26zM44 50V24l5-8 5 8v26z
 note:S('<path d="M14 8h30l8 8v40H14z" fill="#d9ceb2" stroke="#7a6a4a" stroke-width="2.5"/><path d="M22 24h24M22 32h24M22 40h16" stroke="#4a3a28" stroke-width="2.5"/>'),
 fuse:S('<rect x="10" y="24" width="44" height="16" rx="8" fill="#7a8088" stroke="#b9bcc0" stroke-width="3"/><path d="M4 32h6M54 32h6" stroke="#b08d3c" stroke-width="4"/>'),
 gem:S('<path d="M32 8l18 14-18 34L14 22z" fill="#8a1c1c" stroke="#d4a437" stroke-width="3"/><path d="M14 22h36" stroke="#d4a437" stroke-width="2"/>')};
+IC.shovel=S('<path d="M32 6v30" stroke="#7a5a38" stroke-width="6"/><path d="M24 6h16" stroke="#7a5a38" stroke-width="6"/><path d="M22 36h20l-3 20H25z" fill="#6a6f72" stroke="#9a9a90" stroke-width="3"/>');
 const KC={brass:'#d4a437',silver:'#c0c4c8',cellar:'#8a9a7a',rusty:'#a8552a',exit:'#b0b4b8',gate:'#8a8f94',locker:'#7d868f'},KD={brass:'Opens the library (Door 3).',silver:'Opens the storage room (Door 4).',cellar:'Opens the cellar (Door 5), at the end of the hall.',rusty:'Opens the ritual chamber (Door 8).',exit:'Unlocks the front door once the power is back.',fuse:'Fits the generator in the boiler room.',gate:'Unlocks the padlock on the front gate.',locker:'Opens the padlocked gun locker in the cellar.'};
 let ixSel=null;
 function invItems(){const L=[];
 if(fl.own)L.push({id:'fl',n:'Flashlight',c:'TOOL',ic:IC.light,b:fl.on?'ON':'OFF',d:'Light draws her attention. Switch it off when she is near.',a:fl.on?'Switch off':'Switch on',fn:()=>{fl.on=!fl.on;A.click()}});
-if(inv.gun)L.push({id:'gun',n:'Pistol',c:'WEAPON',ic:IC.gun,b:inv.mag+'/'+inv.res,eq:held==='gun',d:'Bullets stagger her but never end her. Gunfire is loud.',a:held==='gun'?'Equipped':'Equip',fn:()=>setHeld('gun')});
-if(inv.hammer)L.push({id:'ham',n:'Hammer',c:'TOOL',ic:IC.hammer,eq:held==='hammer',d:'Heavy enough to break boarded planks.',a:held==='hammer'?'Equipped':'Equip',fn:()=>setHeld('hammer')});
+if(inv.gun)L.push({id:'gun',n:'Pistol',c:'WEAPON',ic:IC.gun,b:inv.mag+'/'+inv.res,eq:held==='gun',d:'Bullets stagger her but never end her. Gunfire is loud.',a:held==='gun'?'Holster':'Equip',fn:()=>setHeld(held==='gun'?null:'gun')});
+if(inv.hammer)L.push({id:'ham',n:'Hammer',c:'TOOL',ic:IC.hammer,eq:held==='hammer',d:'Heavy enough to break boarded planks.',a:held==='hammer'?'Holster':'Equip',fn:()=>setHeld(held==='hammer'?null:'hammer')});
 if(inv.gun||inv.res>0)L.push({id:'am',n:'Pistol rounds',c:'AMMO',ic:IC.ammo,b:'x'+inv.res,d:'Spare rounds. The magazine holds six. Press R to reload.'});
 if(inv.band>0)L.push({id:'band',n:'Bandage',c:'MEDICAL',ic:IC.band,b:'x'+inv.band,d:'Clean cloth wrapping. Restores 40 health. Press H to use one without opening the inventory.',a:P.hp>=100?'Not hurt':'Use',fn:()=>useBand()});
 inv.keys.forEach(k=>L.push({id:'k'+k,n:KN[k]||(k+' key'),c:k==='fuse'?'ITEM':'KEY',ic:k==='fuse'?IC.fuse:IC.key(KC[k]||'#c9a45a'),d:KD[k]||'A key to something in this house.'}));
@@ -1869,7 +1896,7 @@ inv.notes.forEach(t=>L.push({id:'n'+t,n:t,c:'NOTE',ic:IC.note,d:'Something writt
 function ixR(){const L=invItems(),g=$('ixg');if(!L.find(i=>i.id===ixSel))ixSel=L.length?L[0].id:null;let h='';
 L.forEach(i=>{h+='<div class="sl'+(i.id===ixSel?' on':'')+'" data-i="'+i.id+'">'+(i.eq?'<i>EQUIPPED</i>':'')+i.ic+(i.b?'<b>'+i.b+'</b>':'')+'</div>'});for(let k=L.length;k<Math.max(12,Math.ceil(L.length/6)*6);k++)h+='<div class="sl em"></div>';g.innerHTML=h;
 g.querySelectorAll('.sl[data-i]').forEach(e=>e.onclick=()=>{ixSel=e.dataset.i;ixR()});
-const it=L.find(i=>i.id===ixSel),b=$('ixa');$('ixd').innerHTML=it?'<small>'+it.c+'</small><h3>'+it.n+'</h3><p>'+it.d+'</p>':'<small>EMPTY</small><h3>Nothing yet</h3><p>Items you find will appear here.</p>';
+const it=L.find(i=>i.id===ixSel),b=$('ixa');$('ixd').innerHTML=it?'<small>'+it.c+'</small><h3>'+it.n+'</h3><p>'+mt(it.d)+'</p>':'<small>EMPTY</small><h3>Nothing yet</h3><p>Items you find will appear here.</p>';
 b.style.display=it&&it.a?'':'none';if(it&&it.a){b.textContent=it.a;b.onclick=()=>{it.fn();if(G.st==='inv')ixR()}}
 let sh='';RELIC.forEach(r=>{const f=inv.rel.has(r.k);sh+='<div class="sl'+(f?'':' q')+'" title="'+(f?r.n+': '+r.t:'Undiscovered')+'">'+(f?IC.gem:'?')+'</div>'});$('ixs2').innerHTML=sh;{const h=$('ixsh');if(h){const k=inv.rel.size,p=MBX&&MBX.placed?MBX.placed.size:0;h.textContent='ARTIFACTS  '+k+' / 5'+(k<5?'  \u00b7  '+(5-k)+' MISSING':'  \u00b7  ALL FOUND')+(p?'  \u00b7  '+p+' PLACED':'')}}}
 function openInv(){if(G.st!=='play'||JS.on||SCX.on||P.sr>0||P.hm>0)return;G.st='inv';for(const k in K)K[k]=0;ixR();$('ix').classList.add('on');if(document.pointerLockElement)document.exitPointerLock()}
@@ -1917,10 +1944,10 @@ const jend=e=>{for(const t of e.changedTouches)if(t.identifier===jid){jid=null;J
 tzR.addEventListener('touchstart',e=>{e.preventDefault();if(lid!==null)return;const t=e.changedTouches[0];lid=t.identifier;lx=t.clientX;ly=t.clientY},pd);
 tzR.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches)if(t.identifier===lid){lookBy((t.clientX-lx)*.0052,(t.clientY-ly)*.0052);lx=t.clientX;ly=t.clientY}},pd);
 const lend=e=>{for(const t of e.changedTouches)if(t.identifier===lid)lid=null};tzR.addEventListener('touchend',lend);tzR.addEventListener('touchcancel',lend);
-const tb=(id,down,up)=>{const b=$(id);b.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();down(b)},pd);if(up){b.addEventListener('touchend',e=>{e.preventDefault();up(b)},pd);b.addEventListener('touchcancel',()=>up(b))}};
+const tb=(id,down,up)=>{const b=$(id);b.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();try{navigator.vibrate&&navigator.vibrate(id==='bFire'?18:10)}catch(x){}down(b)},pd);if(up){b.addEventListener('touchend',e=>{e.preventDefault();up(b)},pd);b.addEventListener('touchcancel',()=>up(b))}};
 tb('bFire',()=>{if(G.st==='play')fire()});tb('bUse',()=>{if(G.st==='play')interact()});tb('bRel',()=>{if(G.st==='play')reload()});
-tb('bFl',()=>{if(G.st==='play'&&fl.own&&!P.hid){fl.on=!fl.on;A.click();if(fl.on)lightScareMaybe()}});tb('bPz',()=>pauseG());
-tb('bCr',b=>{P.cr=!P.cr;b.classList.toggle('on',P.cr)});tb('bIv',()=>{if(G.st==='play')openInv()});tb('bHl',()=>{if(G.st==='play')useBand()});$('ixc').onclick=()=>closeInv();tb('bSw',()=>{if(G.st==='play')swapHeld()});
+tb('bPz',()=>pauseG());
+tb('bCr',b=>{P.cr=!P.cr;b.classList.toggle('on',P.cr)});tb('bIv',()=>{if(G.st==='play')openInv()});$('ixc').onclick=()=>closeInv();
 tb('bBr',()=>{K.Space=1},()=>{K.Space=0})}
 $('bRes').onclick=()=>{$('pause').classList.remove('on');G.st='play';lock()};$('bRst').onclick=()=>{$('pause').classList.remove('on');start()};
 $('bRetry').onclick=()=>{$('dead').classList.remove('on');start()};$('bAgain').onclick=()=>{$('win').classList.remove('on');start()};
