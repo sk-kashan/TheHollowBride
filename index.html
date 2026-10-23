@@ -117,13 +117,15 @@ body.mob #inv{top:70px;right:80px}
 #dbt button{min-width:210px;padding:14px 34px;font:15px Georgia,serif;letter-spacing:.38em;color:#d8cbbb;background:rgba(20,4,6,.7);border:1px solid #6b1a20;transition:.25s}#dbt button:hover{background:#4a0a10;border-color:#b3141c;color:#fff;box-shadow:0 0 26px rgba(160,10,20,.55);transform:translateY(-2px)}
 #dbt #bRetry{background:linear-gradient(#5a0a12,#2c0508);border-color:#a3141c}
 @keyframes dfi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#runTxt{position:fixed;left:0;right:0;bottom:11%;text-align:center;z-index:6;pointer-events:none;font:700 clamp(54px,11vw,140px) Georgia,serif;letter-spacing:.35em;padding-left:.35em;color:#c40d14;text-shadow:0 0 30px #600,0 0 80px #300,0 4px 0 #1a0204;opacity:0}#runTxt.on{animation:runp 3.6s ease-out forwards}@keyframes runp{0%{opacity:0;transform:scale(1.5)}8%{opacity:1;transform:scale(1)}20%{opacity:.35}26%{opacity:1}40%{opacity:.5}46%{opacity:1}80%{opacity:1}100%{opacity:0}}
+#clw{position:fixed;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;opacity:0}#clw path{fill:none;stroke:#7a0000;stroke-width:1.6;stroke-linecap:round}#clw.on{animation:clwk .7s ease-out forwards}@keyframes clwk{0%{opacity:1}55%{opacity:.85}100%{opacity:0}}
 </style></head><body>
 <div id="err">Three.js could not be loaded from the CDN. The game needs an internet connection to start.</div>
 <div id="hud"><div id="vig"></div><div id="grainw"><div id="grain"></div></div><div id="dmg"></div><div id="cross"></div><div id="obj"><div id="objt"></div><div id="objl"></div></div><div id="prompt"></div><div id="msg"></div>
 <div id="stat"><div>Health</div><div class="bar" id="hp"><i></i></div><div class="bar" id="st"><i></i></div></div><div id="ammo"></div>
 <div id="inv"><h3>Inventory</h3><div id="invl"></div></div></div>
 <div id="fade"></div>
-<div id="js"></div><div id="bld"></div><div id="cflash"></div><canvas id="jc"></canvas><div id="hide"></div>
+<svg id="clw" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M18 -5 Q 34 40 48 106"/><path d="M30 -5 Q 46 42 60 106"/><path d="M42 -5 Q 57 38 72 106"/><path d="M54 -5 Q 70 44 84 106"/></svg><div id="runTxt">RUN</div><div id="js"></div><div id="bld"></div><div id="cflash"></div><canvas id="jc"></canvas><div id="hide"></div>
 <div class="scr on" id="menu"><div id="mfog"></div>
 <div class="eyebrow">A SURVIVAL HORROR</div>
 <h1 id="ttl">THE HOLLOW BRIDE</h1>
@@ -879,7 +881,7 @@ const room=(x0,z0,x1,z1,fm,h)=>{pl(x1-x0,z1-z0,fm,(x0+x1)/2,0,(z0+z1)/2,true);pl
 function vlamp(x,y,z,col_,i,fk,d){const l={x,y,z,col:col_,base:i,fk,d:d||11,intensity:i,kill:0,gs:null,bm:null,bc:null,d2:0,sel:0,slot:null};lamps.push(l);return l}
 function lamp(x,y,z,col_,i,fk,d,kind){const l=vlamp(x,y,z,col_,i,fk,d);const hot=new T.Color(col_).lerp(new T.Color(0xffffff),.55);l.bc=hot;
 const gs=new T.Sprite(new T.SpriteMaterial({map:TX.glow,color:col_,transparent:true,opacity:.35,depthWrite:false,blending:T.AdditiveBlending}));gs.position.set(x,y-.08,z);W.add(gs);l.gs=gs;
-const ch=x>30?2.8:3.2,gm=new T.MeshStandardMaterial({color:0x2c2622,metalness:.7,roughness:.45,envMap:envT,envMapIntensity:.5}),cm=new T.MeshStandardMaterial({color:0x1d1612,roughness:.8});
+const ch=(x>30||LPS)?2.8:3.2,gm=new T.MeshStandardMaterial({color:0x2c2622,metalness:.7,roughness:.45,envMap:envT,envMapIntensity:.5}),cm=new T.MeshStandardMaterial({color:0x1d1612,roughness:.8});
 const add=(g_,m,px,py,pz)=>{const me=new T.Mesh(g_,m);me.position.set(px,py,pz);W.add(me);return me};
 if(kind==='table'||kind==='hang'){ /* oil lantern: base, cage bars, glass chimney, flame, cap; hangs from a chain in the ritual chamber */
 const bm=new T.MeshBasicMaterial({color:hot,transparent:true,opacity:.8});l.bm=bm;gs.scale.set(1.1,1.1,1);
@@ -900,7 +902,7 @@ function mt(t){if(!document.body.classList.contains('mob'))return t;return Strin
 const msg=(t,ms)=>{const e=$('msg');e.textContent=mt(t);e.style.opacity=1;clearTimeout(msg.t);msg.t=setTimeout(()=>e.style.opacity=0,ms||3200)};
 const obj=t=>{$('objt').textContent=t};
 function addInt(x,y,z,label,fn,mesh,r){const it={p:new T.Vector3(x,y,z),label,fn,r:r||2.3,mesh};if(mesh){mesh.userData.dyn=1;mesh.position.set(x,y,z);W.add(mesh)}ints.push(it);return it}
-function take(it){it.done=true;if(it.mesh)W.remove(it.mesh)}
+function take(it){it.done=true;if(it.mesh&&it.mesh.parent)it.mesh.parent.remove(it.mesh)}
 const mb=(w,h,d,c,e)=>{const m=new T.Mesh(new T.BoxGeometry(w,h,d),new T.MeshStandardMaterial({color:c,roughness:.6,metalness:.3,emissive:e||0}));m.castShadow=true;return m};
 /* ===== realistic item models: merged PBR metal keys, flashlight, ceramic fuse, aged paper, ammo box ===== */
 TX.mwr=mk(128,128,(g,w,h)=>{g.fillStyle='#b9b9b0';g.fillRect(0,0,w,h);stn(g,w,h,60,'40,34,20',.35,20);for(let i=0;i<70;i++){g.strokeStyle=R()<.5?'rgba(255,255,240,.18)':'rgba(20,14,6,.3)';g.lineWidth=.5+R();g.beginPath();const x=R()*w,y=R()*h;g.moveTo(x,y);g.lineTo(x+R()*30-15,y+R()*30-15);g.stroke()}nz(g,w,h,500,.25)});
@@ -941,7 +943,7 @@ const me=new T.Mesh(bg(ax==='z'?th:w,2.5,ax==='z'?w:th),m||MDR);me.castShadow=tr
 if(ax==='z'){this.g.position.set(x,0,z-w/2);me.position.set(0,1.25,w/2);this.cl=col(x-.15,z-w/2,x+.15,z+w/2,'d')}else{this.g.position.set(x-w/2,0,z);me.position.set(w/2,1.25,0);this.cl=col(x-w/2,z-.15,x+w/2,z+.15,'d')}
 this.g.add(me);this.g.userData.dyn=1;if(this.num&&m!==MB)this.trim(ax,w,th);W.add(this.g);doors.push(this);
 ints.push({p:new T.Vector3(x,1.2,z),r:2.8,tol:1.0,ig:this.cl,label:()=>this.open?'Close '+this.nmz():this.locked?this.nmz()+' (locked)':'Open '+this.nmz(),fn:()=>this.use()})}
-use(){if(this.locked){const k=this.key;if(k==='lever'){msg('Solid shelves. Only books.');return}if(k==='planks'){msg('Boards are nailed across it from this side.');A.o(200,120,.2,.2,'square');return}if(k==='code'){openKeypad();return}
+use(){if(this.hold){msg('The door will not budge.');A.o(200,120,.2,.2,'square');return}if(this.locked){const k=this.key;if(k==='lever'){msg('Solid shelves. Only books.');return}if(k==='planks'){msg('Boards are nailed across it from this side.');A.o(200,120,.2,.2,'square');return}if(k==='code'){openKeypad();return}
 if(k==='exit'){if(!inv.keys.has('exit')){msg('Chained and bolted. It needs the Iron Front Key.');A.o(200,120,.2,.2,'square');return}if(!G.power){msg('The electric lock is dead. The house has no power.');A.o(200,120,.2,.2,'square');return}this.locked=false;A.unlock();W.traverse(o=>{if(o.userData.chain)o.visible=false});this.sw(true);G.ev.door=1;G.fyard=true;buildAdj();msg('The front door swings open. The grounds lie beyond.');obj(inv.keys.has('gate')?'Run to the front gate!':'The front gate is padlocked. Its key is locked in the cellar vault.');return}
 if(inv.keys.has(k)){inv.keys.delete(k);this.locked=false;A.unlock();msg(this.nmz()+' unlocked with the '+KN[k]+'.');this.sw(true);if(k==='brass')obj('Search the library (Door 3).');if(k==='silver')obj('Find what the storage room (Door 4) hides.');if(k==='rusty')obj('Open the ritual chamber (Door 8).')}
 else{msg(this.nmz()+' is locked. It needs the '+KN[k]+'.');A.o(200,120,.2,.2,'square')}return}this.sw(!this.open)}
@@ -978,6 +980,7 @@ Door.n=0;new Door('z',-2,-2,null,1);new Door('z',2,-2,null,-1);const dLib=new Do
 const dCel=new Door('x',0,18,'cellar',-1);const dFront=new Door('x',0,-8,'exit',1,null,.14,'front');const dSec=new Door('z',-10,11,'lever',-1,MB,.3);
 new Door('z',58,7,null,1);const dRit=new Door('z',62,10,'rusty',-1);RITD=dRit;DBACK=new Door('z',10,12.1,'planks',1,null,.14,'back');
 for(const y of [.7,1.3,1.9]){const c=bx(1.5,.07,.05,MW,0,y,-7.75);c.material=new T.MeshStandardMaterial({color:0x2a2a2c,metalness:.9,roughness:.5});c.userData.chain=1;c.userData.dyn=1}
+try{frontLockBuild()}catch(e){console.warn('front lock failed',e)}
 /* lights */
 lamp(0,2.9,-4,0xffc080,1.1,1);lamp(0,2.9,6,0xffb070,1,0,12);lamp(-6,2.8,-3,0xffb070,.9,1);lamp(7,2.8,-2.5,0xffb878,1);lamp(-6,2.8,9,0xffc080,.9,1);lamp(6,2.8,8.5,0xffc080,.8,1);lamp(-12.5,1.2,11,0xff6a30,.8,1,8,'table');
 lamp(60,2.4,4,0xb0c0ff,.9,1,9);lamp(60,2.4,14,0xb0c0ff,.8,1,9);lamp(54,2.4,7,0xb0c0ff,.9,1,9);lamp(67,2.05,10,0xff2010,1.2,1,10,'hang');lamp(0,2.9,16,0x8090c0,.6,1,9);
@@ -1055,10 +1058,10 @@ bx(1.15,.09,.1,MFR,60,2.755,-.82);bx(1.15,.09,.1,MFR,60,2.755,-1.82);bx(.1,.09,1
 vlamp(60,2.3,-1.2,0x8a98c8,.6,1,7)}
 addInt(60,1.4,-1.3,'Climb the ladder up',()=>climb('up'),null,2.5);
 try{ritualBuild()}catch(e){console.warn('ritual dressing failed',e);decal(TX.sigil,67,10,6,0,.03)}web(71.8,2.6,4.2,PI);web(62.3,2.6,15.8,0);
-stoneAltar(70.5,10);const exK=keyInt(70.5,1.13,10,'exit',0xb0b4b8,()=>{A.sfx('ritual',1,true);obj('RUN. Reach the front door.');G.ev.exit=1;bloodStart();lcArm()});
+stoneAltar(70.5,10);const exK=keyInt(70.5,1.13,10,'exit',0xb0b4b8,()=>{A.sfx('ritual',1,true);obj('Leave the ritual room.');G.ev.exit=1;lpArm()});
 try{mysticBox(exK)}catch(e){console.warn('mystic box failed',e);exK.done=false}
 noteInt(70.3,.92,9.2,'Final note','Take the key. Go up. Do not look back.\n\nShe wakes when it leaves the box.');
-buildVault();try{buildLong()}catch(e){console.warn('long corridor failed',e)}
+buildVault();
 /* triggers */
 trig.push({x:6,z:8,r:3,f:()=>{if(G.ev.sto++<1&&G.st==='play'){blackout(2.8);setTimeout(()=>G.st==='play'&&scare('behind'),3000)}}});
 buildYards();
@@ -1226,7 +1229,7 @@ if(B.placed.size>=5){B.busy=true;msg('You set '+r.n+' into the last socket (5/5)
 else msg('You set '+r.n+' into its socket ('+B.placed.size+'/5). '+(5-B.placed.size)+' still dark.'+(!carried().length&&inv.rel.size<5?' The last one is locked away with the old family valuables.':''),4600)},null,2.5)}
 function ritualBuild(){ritTex();RITF={fl:[],sw:[],vl:[],out:0};const cx=67,cz=10,
 fdec=(map,x,z,sz,ry,y)=>{const d=new T.Mesh(new T.PlaneGeometry(sz,sz),new T.MeshStandardMaterial({map,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,roughness:.3,metalness:.05,emissive:0x140000}));d.rotation.x=-PI/2;d.rotation.z=ry||0;d.position.set(x,y||.03,z);W.add(d);return d},
-wdec=(map,x,y,z,ry,w,h)=>{const d=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshStandardMaterial({map,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-3,roughness:.5,emissive:0x140000}));d.position.set(x,y,z);d.rotation.y=ry;W.add(d)},
+wdec=(map,x,y,z,ry,w,h)=>{const d=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshStandardMaterial({map,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-3,roughness:.5,emissive:0x140000}));d.position.set(x,y,z);d.rotation.y=ry;W.add(d);return d},
 wax=new T.MeshStandardMaterial({color:0xd8cdb0,roughness:.85,emissive:0x3a2808}),flm=new T.MeshBasicMaterial({color:0xffd070}),
 iron=new T.MeshStandardMaterial({color:0x1c1d1f,metalness:.85,roughness:.45}),bone=new T.MeshStandardMaterial({color:0xc9bd98,roughness:.6}),
 add=(geo,m,x,y,z)=>{const e=new T.Mesh(geo,m);e.position.set(x,y,z);e.castShadow=false;W.add(e);return e};
@@ -1595,7 +1598,7 @@ function useBand(){if(G.st!=='play'&&G.st!=='inv')return;if(!(inv.band>0)){msg('
 function drwUse(o){o.open=!o.open;A.creak();if(o.open&&!o.looted){o.looted=true;const z=zoneAt(o.x0,o.z0);setTimeout(()=>{const r=R();if(!BONUS.has(z)&&r<.3){BONUS.add(z);if(r<.2){const n=2+(R()*2|0);inv.res+=n;A.pick();msg('Found: '+n+' pistol rounds'+(inv.gun?'':' (you have no pistol yet)'))}else{inv.band=(inv.band||0)+1;A.pick();msg('Found: a bandage. Press H or open the inventory (Tab) to use it.')}}else{A.rustle();msg(['Empty.','Only dust and moth wings.','A few rusty pins.'][R()*3|0])}},450)}}
 function drwUpd(dt){for(const o of DRW){const tg=o.open?1:0;if(Math.abs(o.t-tg)<.002)continue;o.t=lp(o.t,tg,Math.min(1,dt*7));o.g.position.set(o.x0+o.dx*o.t*.3,o.g.position.y,o.z0+o.dz*o.t*.3)}}
 function yardUpd(dt){drwUpd(dt);updTorch(dt);const out=P.lvl===0&&!inHouse(P.x,P.z);OUTK=lp(OUTK,out?1:0,Math.min(1,dt*(out?1.5:3)));const k=OUTK;let wt=0;if(!out&&P.lvl===0){const fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw);for(const d of doors)if(d.open&&(d.nm==='front'||d.nm==='back')){const dx=d.x-P.x,dz=d.z-P.z,dd=Math.hypot(dx,dz);if(dd<10&&(dx*fx+dz*fz)>dd*.4)wt=Math.max(wt,1-dd/10)}for(const w of WINS){const wx=w[0]==='x'?w[3]:w[2],wz=w[0]==='x'?w[2]:w[3],dx=wx-P.x,dz=wz-P.z,d=Math.hypot(dx,dz),ox=w[0]==='z'?w[1]:0,oz=w[0]==='x'?w[1]:0;if(d<8&&(dx*fx+dz*fz)>d*.5&&(fx*ox+fz*oz)>.3)wt=Math.max(wt,1-d/8)}}WK=lp(WK,wt,Math.min(1,dt*3));HV=lp(HV,(P.hid&&P.hs==='on')?1:0,Math.min(1,dt*4));const kv=Math.max(k,WK*.75);{const sv=out||OUTK>.02||WK>.02;if(sv){FRM.setFromProjectionMatrix(FM4.multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse));for(const c of YC)c.m.visible=FRM.intersectsSphere(c.s)&&Math.hypot(c.s.center.x-P.x,c.s.center.z-P.z)<c.s.radius+70}else for(const c of YC)c.m.visible=false;if(sv!==ODV){ODV=sv;for(const m of OD)m.visible=sv}}
-scene.fog.density=lp(.085,.066,kv)*(1-.75*HV);{const nf=lp(30,46,kv);if(Math.abs(nf-cam.far)>2.5){cam.far=nf;cam.updateProjectionMatrix()}}scene.fog.color.copy(FOGC0).lerp(FOGC1,kv);scene.background.copy(scene.fog.color);AMB.intensity=lp(.45,.85,k)+WK*.15+HV*1.1;MOON.intensity=k*.55+WK*.2;SKY.visible=kv>.02;SKY.position.copy(cam.position);A.setOut(k);
+scene.fog.density=lp(.085,.066,kv)*(1-.75*HV)*((LPS&&G.lp&&G.lp.st>=2)?.34:1);{const nf=lp(30,46,kv);if(Math.abs(nf-cam.far)>2.5){cam.far=nf;cam.updateProjectionMatrix()}}scene.fog.color.copy(FOGC0).lerp(FOGC1,kv);scene.background.copy(scene.fog.color);AMB.intensity=lp(.45,.85,k)+WK*.15+HV*1.1;MOON.intensity=k*.55+WK*.2;SKY.visible=kv>.02;SKY.position.copy(cam.position);A.setOut(k);
 if(HX.g){HX.g.visible=ODV;if(ODV){const tn_=performance.now()/1000;
 for(const r of HX.ropes){r.g.rotation.z=Math.sin(tn_*.9+r.ph)*.12;r.g.rotation.x=Math.sin(tn_*.7+r.ph*1.7)*.08}
 if(HX.swing)HX.swing.forEach((p,i)=>{p.rotation.x=Math.sin(tn_*1.1+i*2.2)*(.28+.12*Math.sin(tn_*.3))});
@@ -1840,7 +1843,7 @@ return{g,B,head,bkE,hairs:[],hair,legs,ph:0,st:0,stT:3,arms,dress,light,tw:0,mou
 /* ================= GAME STATE ================= */
 const K={};let RITD=null,hallR=0,hallK=0,shake=0,tn=0,mfT=0,hbT=0,gsT=0,gbT=0,gwT=0,sparkT=20,stepD=0,boT=0,pw=1,lastFilt='',strobe=1;
 const gh={st:'dormant',x:0,z:0,hp:100,t:0,path:[],pk:-1,seen:[0,0],lose:0,atk:0,face:0,vis:false,lvl:0,aggr:1,pause:0,tg:null,rel:0,stk:0,sx:0,sz:0,mvg:false,spd:0,d:99,after:'',ls:false};
-function reset(){cineReset();hallR=0;hallK=0;P={x:-6,z:-1,y:1.65,yaw:-PI/2,pitch:0,vx:0,vz:0,hp:100,st:100,cr:false,spr:false,lvl:0,noise:0,bob:0,fc:0,rl:0,rc:0,dead:0,cb:null,hid:null,hs:'',ht:0,hd:false,br:100,hold:false,sr:0,hm:0,hh:0,dg:0};$('js').className='';$('hide').className='';JS.on=false;
+function reset(){cineReset();lpReset();hallR=0;hallK=0;P={x:-6,z:-1,y:1.65,yaw:-PI/2,pitch:0,vx:0,vz:0,hp:100,st:100,cr:false,spr:false,lvl:0,noise:0,bob:0,fc:0,rl:0,rc:0,dead:0,cb:null,hid:null,hs:'',ht:0,hd:false,br:100,hold:false,sr:0,hm:0,hh:0,dg:0};$('js').className='';$('hide').className='';JS.on=false;
 inv={keys:new Set(),notes:[],gun:false,mag:0,res:0,band:0,hammer:false,shovel:false,rel:new Set()};G={st:'play',power:false,ev:{brass:0,cellar:0,sto:0,pow:0,exit:0,door:0},hnt:70,dt:0,rj:40+R()*20,lrj:'',yard:false,fyard:false,gard:false,gateOpen:false,wk:200,cs:0,t0:performance.now()};
 Object.assign(gh,{st:'dormant',hp:100,aggr:1,path:[],tg:null,vis:false,lvl:0,pause:0,lose:0,atk:0,after:'',cool:0,cht:0});fl.on=false;fl.own=false;spot.intensity=0;gun.visible=false;HAM.visible=false;SHV.visible=false;held=null;shake=0;tn=0;boT=0;
 build();scReset();obj('You wake in the dark. The front door is chained and bolted. Find a way out.');$('fade').style.opacity=0;$('fade').style.transition='none';setTimeout(()=>$('fade').style.transition='opacity 2s',50)}
@@ -1903,7 +1906,7 @@ if(g.pk!==b||!g.path.length){g.pk=b;g.path=bfs(a,b).slice(1).map(i=>N[i])}while(
 if(H(p[0]-g.x,p[1]-g.z)<.6)g.path.shift();else step_(p[0],p[1],sp,dt);return false}
 function hurt(dmg){if(P.dead)return;P.hp-=dmg;A.thud();shake=.5;setDmg(1);const fx=Math.sin(gh.face),fz=Math.cos(gh.face);mv(P,fx*.8,fz*.8,.32);if(P.hp<=0)die()}
 let _dread=0;
-function ghostAI(dt){const g=gh;if(g.st==='dormant'||g.st==='kill')return;
+function ghostAI(dt){const g=gh;if(g.st==='dormant'||g.st==='kill'||g.st==='lp')return;
 if(g.vis&&g.lvl===P.lvl&&g.st!=='gone'&&H(P.x-g.x,P.z-g.z)<9){_dread-=dt;if(_dread<=0){_dread=H(P.x-g.x,P.z-g.z)<4?.9:2.2;A.heart();if(R()<.5)A.whisper();shake=Math.max(shake,.06+(9-H(P.x-g.x,P.z-g.z))*.012)}}
 if(g.st==='gone'){g.t-=dt;if(g.t<=0){g.hp=70;g.st='wander';g.aggr+=.25;spawnFar()}return}
 g.mvg=false;for(const d of doors)if(!d.locked&&!d.open&&H(g.x-d.x,g.z-d.z)<1.9)d.sw(true);
@@ -1930,7 +1933,7 @@ case 'stagger':g.t-=dt;if(g.t<=0){g.st='chase';g.seen=[P.x,P.z];g.lose=0}break;
 case 'stare':g.face=la(g.face,Math.atan2(P.x-g.x,P.z-g.z),.2);g.t-=dt;if(g.t<=0){if(g.after==='chase'){g.st='chase';g.seen=[P.x,P.z]}else{blackout(.4);g.st='wander';g.tg=null;spawnFar()}}break}
 /* stuck -> supernatural phase */
 if(g.mvg&&g.st!=='stagger'){g.stk+=dt;if(g.stk>.9){if(H(g.x-g.sx,g.z-g.sz)<.5){g.sc=(g.sc||0)+1;const own=nn(g.x,g.z,g.lvl),n=g.sc>=3?(g.path[1]||g.path[0]||N[nn(P.x,P.z,g.lvl)]):(N[own]||N[0]);g.pk=-1;g.path=[];g.gp=null;g.gfail=0;if(g.sc===1){/* 1st: try the other side and re-plan */g.ds=-(g.ds||1);g.dsT=1.2}else if(g.sc>=3||H(g.x-N[own][0],g.z-N[own][1])>.3){if(g.sc>=3&&g.st==='chase'&&H(n[0]-P.x,n[1]-P.z)<3){/* never pop next to player */}else{const f=ngFree(n[0],n[1])||n;g.x=f[0];g.z=f[1]}}if(g.sc>=3)g.sc=0}else g.sc=0;g.sx=g.x;g.sz=g.z;g.stk=0}}else g.stk=0}
-function die(){if(P.dead)return;P.dead=1;P.hid=null;P.hd=false;$('hide').className='';JS.on=false;$('js').className='';G.st='dying';G.dt=0;gh.st='kill';spot.intensity=1.2;fl.on=true;cineStart()}
+function die(k){if(P.dead)return;P.dead=1;P.hid=null;P.hd=false;$('hide').className='';JS.on=false;$('js').className='';G.st='dying';G.dt=0;gh.st='kill';spot.intensity=1.2;fl.on=true;if(k&&k.burn)bdStart(k.burn[0],k.burn[1]);else cineStart()}
 function escape(){G.st='won';$('fade').style.background='#fff';$('fade').style.opacity=1;A.unlock();if(document.pointerLockElement)document.exitPointerLock();setTimeout(()=>{showWin();$('hud').classList.remove('on');$('fade').style.opacity=0},2600)}
 /* ================= WEAPON ================= */
 const rc=new T.Raycaster();
@@ -1943,7 +1946,7 @@ rc.set(o,d);rc.far=40;const hs=rc.intersectObjects(solids,false),wd=hs.length?hs
 if(gh.vis&&gh.lvl===P.lvl&&gh.st!=='kill'&&gh.st!=='gone')for(const [y,r,dm] of [[1.85,.2,45],[1.3,.38,25]]){const v=new T.Vector3(gh.x,y,gh.z).sub(o),t=v.dot(d);if(t>0&&t<wd){const pr=v.sub(d.clone().multiplyScalar(t)).length();if(pr<r){hitGhost(dm,new T.Vector3(gh.x,y,gh.z),d.clone(),hs.length?hs[0]:null);done=true;break}}}
 if(!done&&hs.length){burst(hs[0].point,12,3);puff(hs[0].point,0,.15,0,.1,.45,.9,.22,0x9a948a);A.n(.08,4500,900,.22,'bandpass');const h=new T.Mesh(new T.CircleGeometry(.04,6),new T.MeshBasicMaterial({color:0x000000}));h.position.copy(hs[0].point).addScaledVector(hs[0].face.normal,.01);h.lookAt(h.position.clone().add(hs[0].face.normal));W.add(h)}
 if(inv.mag===0&&inv.res>0)msg('Reload: R',1500)}
-function hitGhost(dm,p,d,wp){burst(p,5,2);bloodHit(p,d,wp,38);ghostHitFx(dm,d);gh.hp-=dm;if(gh.hp<=0){gh.st='gone';gh.t=45;gh.vis=false;burst(new T.Vector3(gh.x,1.2,gh.z),60,6);bloodHit(new T.Vector3(gh.x,1.2,gh.z),d,null,95);msg('She dissolves. She will return.');return}
+function hitGhost(dm,p,d,wp){if(gh.st==='lp'&&G.lp){burst(p,5,2);bloodHit(p,d,wp,38);ghostHitFx(dm,d);return}burst(p,5,2);bloodHit(p,d,wp,38);ghostHitFx(dm,d);gh.hp-=dm;if(gh.hp<=0){gh.st='gone';gh.t=45;gh.vis=false;burst(new T.Vector3(gh.x,1.2,gh.z),60,6);bloodHit(new T.Vector3(gh.x,1.2,gh.z),d,null,95);msg('She dissolves. She will return.');return}
 if(gh.st!=='stagger'){gh.st='stagger';gh.t=2.4}else gh.t=Math.min(3,gh.t+.7);gh.vis=true;const fx=Math.sin(P.yaw),fz=Math.cos(P.yaw);mv(gh,-fx*.7,-fz*.7,.4)}
 function reload(){if(!inv.gun||held!=='gun'||P.rl>0||inv.mag>=6||inv.res<=0)return;P.rl=1.6;A.reload();GRL.e=inv.mag===0;GRL.d=0;GRL.s=0}
 function noiseEv(r){P.ev=Math.max(P.ev||0,r)}
@@ -2010,7 +2013,7 @@ try{if(!$('credFace').style.backgroundImage)$('credFace').style.backgroundImage=
 function closeCred(){$('cred').classList.remove('on')}
 function showWin(){const t=Math.round((performance.now()-(G.t0||performance.now()))/1000);$('wst').textContent='Time in the house: '+Math.floor(t/60)+':'+String(t%60).padStart(2,'0')+'   \u00b7   Artifacts found: '+inv.rel.size+' / 5   \u00b7   Crates searched: '+(G.cs||0);$('win').classList.add('on');setTimeout(()=>{if($('win').classList.contains('on')&&!$('cred').classList.contains('on'))openCred('win')},3600)}
 $('bCred').onclick=()=>openCred('menu');$('bCredBack').onclick=closeCred;$('bWinCred').onclick=()=>openCred('win');
-function lookBy(dx,dy){if(G.st!=='play'||G.turn||P.cb||P.sr>0||P.hm>0||P.dg>0||SCX.on)return;P.yaw-=dx;P.pitch=cl(P.pitch-dy,-1.4,1.4);if(P.hid&&P.hs==='on'){P.yaw=cl(P.yaw,P.hid.cam.yaw-.6,P.hid.cam.yaw+.6);P.pitch=cl(P.pitch,-.35,.35)}}
+function lookBy(dx,dy){if(G.st!=='play'||G.turn||(G.lp&&G.lp.lk)||P.cb||P.sr>0||P.hm>0||P.dg>0||SCX.on)return;P.yaw-=dx;P.pitch=cl(P.pitch-dy,-1.4,1.4);if(P.hid&&P.hs==='on'){P.yaw=cl(P.yaw,P.hid.cam.yaw-.6,P.hid.cam.yaw+.6);P.pitch=cl(P.pitch,-.35,.35)}}
 function beginGame(){if(G.st!=='menu')return;A.init();A.setV();$('menu').classList.remove('on');G.st='intro';$('intro').classList.add('on');
 if(MOB){try{const d=document.documentElement;(d.requestFullscreen||d.webkitRequestFullscreen||function(){}).call(d);screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}
 const L=['Voss Mansion. 1893.','Eleanor Voss was left at the altar.','They walled her up below, in her wedding dress.','You wake in the dark. The front door is chained.'],el=$('introt');el.innerHTML='';let i=0;
@@ -2059,7 +2062,7 @@ function pickInt(){const o=cam.position;cam.getWorldDirection(dd);let best=null,
 function interact(){if(G.st!=='play'||P.cb||P.sr>0||P.hm>0||P.dg>0||SCX.on)return;if(P.hid){if(P.hs==='on')exitHide();return}const it=pickInt();if(it)it.fn()}
 /* ================= LADDER CLIMBING ================= */
 function climb(dir){if(P.cb||G.st!=='play')return;A.rung();
-if(dir==='up')P.cb={t:0,d:2.1,rt:0,f:0,x0:P.x,z0:P.z,x1:(G.lc&&G.lc.st===1?LC.XL+.05:60),z1:(G.lc&&G.lc.st===1?LC.Z:-1.3),y0:P.y,y1:2.55,yaw:(G.lc&&G.lc.st===1?PI/2:0),pit:.45,fn:()=>{const lcu=G.lc&&G.lc.st===1;P.x=0;P.z=19.5;P.yaw=0;P.pitch=0;P.lvl=0;P.y=1.65;P.cb=null;changeLvl();if(lcu)lcUp()}};
+if(dir==='up'){const inLP=!!(G.lp&&G.lp.on&&LPS);P.cb={t:0,d:2.1,rt:0,f:0,x0:P.x,z0:P.z,x1:inLP?LPS.XL:60,z1:inLP?LPS.Z:-1.3,y0:P.y,y1:2.55,yaw:inLP?PI/2:0,pit:.45,fn:()=>{P.x=0;P.z=19.5;P.yaw=0;P.pitch=0;P.lvl=0;P.y=1.65;P.cb=null;if(inLP)lpRestore();changeLvl();if(inLP)lpUp()}}}
 else P.cb={t:0,d:2.2,rt:0,f:0,x0:P.x,z0:P.z,x1:0,z1:20.85,y0:P.y,y1:-1.7,yaw:0,pit:-.55,fn:()=>{P.x=60;P.z=.5;P.yaw=PI;P.pitch=0;P.lvl=1;P.y=1.65;P.cb=null;changeLvl()}}}
 function climbUpd(dt){const c=P.cb;if(!c)return;c.t+=dt;const k=cl(c.t/c.d,0,1),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
 P.x=lp(c.x0,c.x1,Math.min(1,k*3));P.z=lp(c.z0,c.z1,Math.min(1,k*3));P.y=lp(c.y0,c.y1,e);P.yaw=la(P.yaw,c.yaw,Math.min(1,dt*5));P.pitch=lp(P.pitch,c.pit,Math.min(1,dt*4));
@@ -2101,7 +2104,7 @@ const rnd=()=>R()-.5;
 function update(dt){const dying=G.st==='dying';
 if(!dying){
 /* player movement */
-const lk=!!P.cb||!!P.hid||P.sr>0||P.hm>0||P.dg>0||SCX.on,mvk=lk?0:cl((K.KeyW?1:0)-(K.KeyS?1:0)-JY,-1,1),sk=lk?0:cl((K.KeyD?1:0)-(K.KeyA?1:0)+JX,-1,1),moving=mvk||sk,mg0=Math.min(1,H(mvk,sk));P.cr=P.cr&&!K.ShiftLeft;const ctl=K.ControlLeft||K.ControlRight||P.cr;
+const lk=!!P.cb||!!P.hid||P.sr>0||P.hm>0||P.dg>0||SCX.on||!!(G.lp&&G.lp.lk),mvk=lk?0:cl((K.KeyW?1:0)-(K.KeyS?1:0)-JY,-1,1),sk=lk?0:cl((K.KeyD?1:0)-(K.KeyA?1:0)+JX,-1,1),moving=mvk||sk,mg0=Math.min(1,H(mvk,sk));P.cr=P.cr&&!K.ShiftLeft;const ctl=K.ControlLeft||K.ControlRight||P.cr;
 if(P.st<=0)P.sl=1;if(P.st>35)P.sl=0;P.spr=!!(K.ShiftLeft&&moving&&!ctl&&!P.sl);
 const sp=P.spr?5.2:ctl?1.5:3.2;let ix=-Math.sin(P.yaw)*mvk+Math.cos(P.yaw)*sk,iz=-Math.cos(P.yaw)*mvk-Math.sin(P.yaw)*sk;const L=H(ix,iz)||1;ix=ix/L*sp*mg0;iz=iz/L*sp*mg0;if(!moving){ix=0;iz=0}
 P.vx=lp(P.vx,ix,Math.min(1,dt*10));P.vz=lp(P.vz,iz,Math.min(1,dt*10));mv(P,P.vx*dt,P.vz*dt,.32);
@@ -2119,12 +2122,12 @@ for(const f of falls)if(f.fall){f.m.position.y=Math.max(.15,f.m.position.y-dt*6)
 /* flashlight + lights */
 if(boT>0)boT-=dt;pw=boT>0?(R()<.2?.35:0):1;
 const nearG=gh.vis&&gh.lvl===P.lvl&&gh.d<7&&gh.st!=='gone';let fi=fl.on&&!dying?2.6:0;if(fl.on&&(boT>0||(nearG&&R()<.25)||(gh.st==='stare'&&R()<.5)))fi=R()<.4?0:1;if(dying)fi=R()<.3?0:1.6;spot.intensity=lp(spot.intensity,fi*strobe,.5);BEAM.visible=spot.intensity>.08&&QUAL>0;BEAM.material.uniforms.uA.value=spot.intensity/2.6;
-lampUpd(dt);dustUpd(dt);hideUpd(dt);jumpUpd(dt);yardUpd(dt);scUpd(dt);lcTick(dt);
+lampUpd(dt);dustUpd(dt);hideUpd(dt);jumpUpd(dt);yardUpd(dt);scUpd(dt);lpTick(dt);
 /* haunt scheduling */
 if(!dying){G.hnt-=dt;if(G.hnt<=0&&prog()>=1&&(gh.st==='wander'||gh.st==='search')&&tn<.5){const k=['corridor','doorway','behind'][Math.floor(R()*3)];scare(k);G.hnt=Math.max(30,85-prog()*6)+R()*30}else if(G.hnt<=0)G.hnt=10;
 ghostAI(dt);A.voiceUpd(dt);P.ev=0;G.rj-=dt;if(G.rj<=0&&!P.cb){const okj=rjump();G.rj=okj===false?5:22+R()*38}
 sparkT-=dt;if(sparkT<=0){sparkT=20+R()*25;const p=new T.Vector3(P.x+rnd()*2,2.9,P.z+rnd()*8);burst(p,22,4);A.spark();lamps.forEach(l=>{if(R()<.4)l.kill=.15})}}
-else{cineUpd(dt)}
+else{if(BD.on)bdUpd(dt);else cineUpd(dt)}
 /* ghost model */
 ghostAnim(dt);
 /* tension */
@@ -2231,17 +2234,40 @@ slamSnd();shake=Math.max(shake,.7);msg('The door slams shut behind you.',3000);
 setTimeout(()=>{if(RITD)RITD.fast=0},900);
 /* then every light dies and the house turns blood red with RUN written on the walls */
 setTimeout(()=>{if(G.st!=='play'&&G.st!=='dying')return;G.blood=1;for(const l of lamps)l.kill=Math.max(l.kill||0,4.2);G.runM=G.runM||hrBuild();blackout(3.5)},1100)},wasOpen?900:1800)},100)}
-function lampUpd(dt){const lv1=P.lvl===1;hallRedUpd(dt);ritUpd();
+/* ===== front door: heavy chains with a padlock, plus an electric lock panel (red = no power, amber = powered, green = open) ===== */
+let ELK=null;
+function frontLockBuild(){const Z=-7.7,steel=new T.MeshStandardMaterial({color:0x6a6e72,metalness:.95,roughness:.3,envMap:envT,envMapIntensity:.9}),dark=new T.MeshStandardMaterial({color:0x1b1c1e,metalness:.6,roughness:.5});
+const ch=new T.Group();ch.userData.chain=1;ch.userData.dyn=1;
+const link=(x,y,z,ry,vert)=>{const m=new T.Mesh(new T.TorusGeometry(.05,.013,6,12),steel);m.scale.set(1,1.45,1);m.position.set(x,y,z);m.rotation.set(0,ry,vert?0:PI/2);m.castShadow=true;ch.add(m)};
+for(const [y,sl] of [[.62,.05],[1.28,0],[1.95,-.05]])for(let i=0,x=-.98;x<=.98;i++,x+=.085)link(x,y+Math.sin(i*.5)*.012+sl*(1-Math.abs(x)),Z,i%2?0:PI/2,false);
+for(let i=0,y=.15;y<2.3;i++,y+=.09){link(-.82,y,Z-.02,i%2?0:PI/2,true);link(.82,y,Z-.02,i%2?0:PI/2,true)}
+/* padlock */
+const pb=new T.Mesh(new T.BoxGeometry(.17,.2,.07),steel);pb.position.set(0,1.1,Z+.03);ch.add(pb);const sh=new T.Mesh(new T.TorusGeometry(.055,.014,6,14,PI),steel);sh.position.set(0,1.2,Z+.03);ch.add(sh);const kh=new T.Mesh(new T.CylinderGeometry(.015,.015,.075,8),dark);kh.rotation.x=PI/2;kh.position.set(0,1.08,Z+.07);ch.add(kh);
+W.add(ch);
+/* electric lock panel on the wall beside the door */
+const g=new T.Group();g.userData.dyn=1;g.position.set(1.25,1.3,-7.83);
+const body=new T.Mesh(new T.BoxGeometry(.3,.44,.07),dark);g.add(body);const rim=new T.Mesh(new T.BoxGeometry(.32,.46,.03),steel);rim.position.z=-.025;g.add(rim);
+const cv=document.createElement('canvas');cv.width=256;cv.height=192;const tx=new T.CanvasTexture(cv),scr=new T.Mesh(new T.PlaneGeometry(.24,.18),new T.MeshBasicMaterial({map:tx}));scr.position.set(0,.09,.037);g.add(scr);
+for(let r=0;r<3;r++)for(let c=0;c<3;c++){const k=new T.Mesh(new T.BoxGeometry(.045,.03,.015),steel);k.position.set(-.07+c*.07,-.03-r*.045,.04);g.add(k)}
+const led=new T.Mesh(new T.SphereGeometry(.016,10,8),new T.MeshBasicMaterial({color:0xff1010}));led.position.set(.1,.19,.045);g.add(led);
+const gl=new T.Sprite(new T.SpriteMaterial({map:TX.glow,color:0xff1010,transparent:true,opacity:.6,depthWrite:false,blending:T.AdditiveBlending}));gl.scale.set(.5,.5,1);gl.position.set(.1,.19,.06);g.add(gl);
+/* cable down to the door frame */
+const cab=new T.Mesh(new T.CylinderGeometry(.008,.008,1.1,6),dark);cab.position.set(-.12,-.55,.0);g.add(cab);
+W.add(g);ELK={g,led,gl,cv,tx,st:''}}
+function frontLockUpd(){const E=ELK;if(!E||!G)return;const on=!!G.power,open=!!(G.ev&&G.ev.door),t=performance.now()/1000,bl=Math.sin(t*6)>0;
+const st=open?'open':on?'ready':'dead';const col=open?0x20ff50:on?0xffa020:(bl?0xff1010:0x400808);E.led.material.color.setHex(col);E.gl.material.color.setHex(col);E.gl.material.opacity=(st==='dead'&&!bl)?.1:.6;
+if(st!==E.st){E.st=st;const g=E.cv.getContext('2d');g.fillStyle='#050808';g.fillRect(0,0,256,192);g.textAlign='center';g.fillStyle=open?'#30ff60':on?'#ffb040':'#ff3030';g.font='bold 26px monospace';g.fillText('ELECTRIC LOCK',128,48);g.font='bold 34px monospace';g.fillText(open?'UNLOCKED':on?'POWER OK':'NO POWER',128,108);g.font='18px monospace';g.fillStyle='#8a9a9a';g.fillText(open?'':on?'IRON KEY REQUIRED':'SYSTEM OFFLINE',128,150);E.tx.needsUpdate=true}}
+function lampUpd(dt){const lv1=P.lvl===1;hallRedUpd(dt);ritUpd();try{frontLockUpd()}catch(e){}
 for(const l of lamps){let f=1;if(l.fk&&R()<.04)f=.2+R()*.5;if(!G.power&&l.fk&&R()<.01)f=0;if(l.kill>0){l.kill-=dt;f=0}l.intensity=l.base*pw*f*strobe*(G.power?1:.8);
 const r=Math.min(1,l.intensity/l.base);if(l.gs)l.gs.material.opacity=.4*r;if(l.bm)l.bm.color.copy(l.bc).multiplyScalar(.12+.88*r);
-l.sel=0;l.d2=((l.x>30)===lv1)?(l.x-P.x)*(l.x-P.x)+(l.z-P.z)*(l.z-P.z):1e9}
+l.sel=0;l.d2=(LPS||(l.x>30)===lv1)?(l.x-P.x)*(l.x-P.x)+(l.z-P.z)*(l.z-P.z):1e9}
 for(let k=0;k<POOL.length;k++){let b=null,bd=1e9;for(const l of lamps)if(!l.sel&&l.d2<bd){bd=l.d2;b=l}if(!b)break;b.sel=1}
 for(const s of POOL){if(s.vl&&!s.vl.sel){s.f-=dt*3;if(s.f<=0){s.f=0;s.vl.slot=null;s.vl=null}}}
 for(const l of lamps){if(l.sel&&!l.slot){for(const s of POOL)if(!s.vl){s.vl=l;l.slot=s;s.f=0;s.L.position.set(l.x,l.y,l.z);s.L.color.setHex(l.col);s.L.distance=l.d;break}}}
 for(const s of POOL){if(s.vl){if(s.vl.sel)s.f=Math.min(1,s.f+dt*4);s.L.intensity=s.vl.intensity*s.f}else s.L.intensity=0}}
 function ghostAnim(dt){const m=gmesh,g=gh,t=performance.now()/1000;if(!m)return;if(CINE.on)return;const jv=JS.on;m.g.visible=jv||(g.vis&&g.st!=='dormant'&&g.st!=='gone'&&g.lvl===P.lvl);if(!m.g.visible){m.light.intensity=0;return}
 let lx,lz;if(jv){const k=cl(JS.t/.2,0,1),e=k*k*(3-2*k),dist=lp(3.4,.5,e),fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw);m.g.position.set(P.x+fx*dist,P.y-1.93+Math.sin(JS.t*50)*.012*e,P.z+fz*dist);m.g.rotation.y=Math.atan2(-fx,-fz);lx=P.x+fx*.25;lz=P.z+fz*.25}else{m.g.position.set(g.x,0,g.z);m.g.rotation.y=g.face;lx=g.x;lz=g.z}
-const ch=jv||g.st==='chase'||g.st==='kill'||g.st==='rush',stg=g.st==='stagger',stare=g.st==='stare'||g.st==='check',walking=!jv&&g.mvg&&!stg,sp=ch?1.8:g.mvg?1:.4;
+const ch=jv||g.st==='chase'||g.st==='kill'||g.st==='rush'||g.st==='lp',stg=g.st==='stagger',stare=g.st==='stare'||g.st==='check',walking=!jv&&g.mvg&&!stg,sp=ch?1.8:g.mvg?1:.4;
 m.hitT=(m.hitT===undefined?9:m.hitT)+dt;const rec=stg?Math.exp(-m.hitT*6):0,rise=stg?cl(1-g.t/.5,0,1):0,dbl=stg?cl((m.hitT-.12)/.35,0,1)*(1-rise):0,kx=m.kx||0,kz=m.kz||0;
 /* gait phase + stop-motion stutter glitches */
 m.ph+=(walking?g.spd:0)*dt*(ch?3.4:4.4);m.stT-=dt;if(m.stT<=0){m.stT=3.5+R()*5;m.st=.45+R()*.5}m.st=Math.max(0,m.st-dt);
@@ -2319,7 +2345,7 @@ C.s={rx:0,rxv:0,rz:0,rzv:0,hp:0,hpv:0,hz:0,hzv:0,legs:[{a:0,av:0,k:0,kv:0},{a:0,
 $('hud').classList.remove('on');R_.PL.visible=false;C.q0=cam.quaternion.clone();C.cp=new T.Vector3(P.x,cam.position.y,P.z);C.y0=cam.position.y;C.lk=null;C.blink=0;C.gs=0;C.jl=0;C.hands=C.hands||mkHands();C.hands.visible=true;m.arms.forEach(a=>{a.sh.scale.set(1,1,1);a.ha.scale.setScalar(1)});R_.PL.position.set(0,0,0);R_.root.rotation.set(0,C.pYaw,0,'YXZ');R_.root.position.set(P.x,.84,P.z);R_.spine.rotation.set(0,0,0);R_.head.rotation.set(0,0,0);R_.arms.forEach(a=>{a.sh.rotation.set(0,0,a.s*.05);a.el.rotation.set(-.12,0,0)});R_.legs.forEach(l=>{l.hip.rotation.set(0,0,0);l.kn.rotation.set(0,0,0);l.an.rotation.set(0,0,0)});
 R_.fm.forEach(f=>f.opacity=1);m.g.visible=true;m.B.visible=true;gh.vis=true;gh.lvl=P.lvl;P.sr=999;P.sc=null;C.fov0=cam.fov;C.ev={};
 if(A.c){A.o(46,38,9,.5,'sawtooth');A.o(92,70,8,.22,'triangle');A.n(.5,3000,200,.5,'lowpass')}}
-function cineReset(){const C=CINE;C.on=false;C.T=0;if(C.rig)C.rig.PL.visible=false;if(POST.on){const F=POST.mFinal.uniforms;F.uBlood.value=0;F.uWarp.value=0;F.uFlash.value=0;F.uPulse.value=0}const b=$('bld');if(b)b.style.opacity=0;const f=$('cflash');if(f)f.style.opacity=0;if(A.c&&A.m)A.m.gain.setTargetAtTime(A.mute?0:A.vol,A.c.currentTime,.05);if(C.hands)C.hands.visible=false;if(gmesh){gmesh.aura.visible=true;gmesh.arms.forEach(a=>{a.sh.scale.set(1,1.5,1);a.ha.scale.setScalar(1.3)})}}
+function cineReset(){const C=CINE;bdReset();C.on=false;C.T=0;if(C.rig)C.rig.PL.visible=false;if(POST.on){const F=POST.mFinal.uniforms;F.uBlood.value=0;F.uWarp.value=0;F.uFlash.value=0;F.uPulse.value=0}const b=$('bld');if(b)b.style.opacity=0;const f=$('cflash');if(f)f.style.opacity=0;if(A.c&&A.m)A.m.gain.setTargetAtTime(A.mute?0:A.vol,A.c.currentTime,.05);if(C.hands)C.hands.visible=false;if(gmesh){gmesh.aura.visible=true;gmesh.arms.forEach(a=>{a.sh.scale.set(1,1.5,1);a.ha.scale.setScalar(1.3)})}}
 /* ---------- per-frame: ghost + victim animation (runs inside update while G.st==='dying') ---------- */
 function cineUpd(dt){const C=CINE,m=gmesh;if(!C.on||!m||!C.rig)return;if(C.shown&&C.T>10.8)return;dt=Math.min(dt,.05);C.T+=dt;const Tm=C.T,t=performance.now()/1000,u=C.u,p0=C.p0,R_=C.rig,S=C.s;
 const pf=sst(4.3,7.9,Tm),fin=Tm>8?ez((Tm-8)/.14):0,fwx=-u.x,fwz=-u.z;
@@ -2399,7 +2425,7 @@ const roll=Math.sin(t*1.1)*.02+lp(0,-.14,sst(6.2,8,Tm))+nsy(t*4,9)*.012*sst(2,8,
 cam.fov=lp(74,60,pf)+(C.pulse||0)*1.2+(Tm>8?ez((Tm-8)/.12)*10:0);cam.updateProjectionMatrix();
 /* his hands: rest at his sides, then claw at her wrists, then go limp */
 const gr=Tm>.55?ez((Tm-.55)/.4):0,wk=1-sst(6.2,7.6,Tm),st=gr*wk;
-C.hands.visible=true;C.hands.userData.H.forEach((h,i)=>{const s=i?1:-1,ph=i*2.1;
+C.hands.visible=true;C.hands.userData.H.forEach((h,i)=>{h.scale.set(1,1,1);const s=i?1:-1,ph=i*2.1;
 h.position.set(lp(s*.22,s*.08+Math.sin(Tm*9+ph)*.03*st,gr),lp(-.42,-.17+Math.sin(Tm*11+ph)*.025*st,gr)-(1-wk)*.2,lp(-.3,-.32+Math.sin(Tm*8+ph)*.03*st,gr));
 h.rotation.set(-.3+Math.sin(Tm*10+ph)*.15*st+(1-wk)*.6,s*-.25+Math.sin(Tm*7+ph)*.1*st,s*.35)});
 const HP=GF;
@@ -2409,15 +2435,69 @@ spot.intensity=(R()<.35?0:1.4)*(1-sst(5.5,7,Tm)*.6);
 A.lis(cam);
 if(Tm>9.6&&document.pointerLockElement)document.exitPointerLock()}
 /* ---------- death screen ---------- */
-function showDead(){const el=$('dead'),s=Math.floor((performance.now()-(G.t0||performance.now()))/1000),mm=String(Math.floor(s/60)).padStart(2,'0'),ss=String(s%60).padStart(2,'0');
+function showDead(q){$('dq').textContent=q||'She never lets go.';const el=$('dead'),s=Math.floor((performance.now()-(G.t0||performance.now()))/1000),mm=String(Math.floor(s/60)).padStart(2,'0'),ss=String(s%60).padStart(2,'0');
 $('dst').innerHTML='<span>SURVIVED <b>'+mm+':'+ss+'</b></span><span>KEYS FOUND <b>'+inv.keys.size+'</b></span><span>SECRETS <b>'+inv.rel.size+' / 5</b></span>';
 const dr=$('ddrip');dr.innerHTML='';for(let i=0;i<22;i++){const d=document.createElement('i');d.style.cssText='left:'+(i*4.6+R()*3)+'%;--w:'+(5+R()*16)+'px;--h:'+(60+R()*240)+'px;--d:'+(2.6+R()*3)+'s;--s:'+(R()*1.6)+'s';dr.appendChild(d)}
 el.classList.remove('on');void el.offsetWidth;el.classList.add('on');$('hud').classList.remove('on');if(document.pointerLockElement)document.exitPointerLock()}
 function toMenu(){['dead','pause','win','cred','sett','ctrl','load'].forEach(i=>$(i).classList.remove('on'));$('hud').classList.remove('on');cineReset();reset();G.st='menu';gh.st='dormant';P.lvl=0;$('menu').classList.add('on');if(document.pointerLockElement)document.exitPointerLock()}
+
+/* ================= DEATH BY THE BURNED ONE: it tackles you to the floor, pins you, rakes at your face, and burns you out (first person) ================= */
+const BD={on:false,T:0,ev:{},u:{x:0,z:1},p0:{x:0,z:0},c0:{x:0,z:0},cp:new T.Vector3(),y0:1.6,jl:0,shown:false,hb:0,gs:0,bk:0,blink:0,flash:0,pulse:0,lk:null,q0:null};
+function bdReset(){BD.on=false;BD.T=0;BD.shown=false;BD.ev={};const c=$('clw');if(c)c.classList.remove('on');if(typeof CINE!=='undefined'&&CINE.hands&&!CINE.on)CINE.hands.visible=false;if(BZ&&BZ.g.visible&&G&&G.st==='menu'){BZ.g.visible=false}if(BD.fresh){BD.fresh=0;if(BZ){BZ.g.visible=false;BZ.armOff=[0,0];BZ.legOff=[0,0];BZ.g.position.y=0}BL.intensity=0}}
+function bdStart(cx,cz){const b=burnGet();let ux=cx-P.x,uz=cz-P.z,L=Math.hypot(ux,uz);if(L<.2){ux=-Math.sin(P.yaw);uz=-Math.cos(P.yaw);L=1}ux/=L;uz/=L;
+Object.assign(BD,{on:true,T:0,shown:false,ev:{},u:{x:ux,z:uz},p0:{x:P.x,z:P.z},c0:{x:cx,z:cz},y0:cam.position.y,hb:.3,gs:0,bk:0,blink:0,flash:0,pulse:0,lk:null,jl:0,fresh:1});BD.q0=cam.quaternion.clone();BD.cp.set(P.x,cam.position.y,P.z);
+$('hud').classList.remove('on');b.g.visible=true;b.boost=1.6;setPose(b,'reach',true);b.armOff=[0,0];b.legOff=[0,0];gh.vis=false;P.sr=999;P.sc=null;
+CINE.hands=CINE.hands||mkHands();CINE.hands.visible=true;spot.intensity=1.2;fl.on=true;
+if(A.c){A.o(46,38,9,.5,'sawtooth');A.n(.5,3000,200,.5,'lowpass')}}
+function bdUpd(dt){const D=BD,b=BZ;if(!D.on||!b)return;if(D.shown&&D.T>10.8)return;dt=Math.min(dt,.05);D.T+=dt;const Tm=D.T,t=performance.now()/1000,u=D.u,p0=D.p0,fin=Tm>8?ez((Tm-8)/.14):0;
+let px,pz,py=0;
+if(Tm<.4){const k=ez2(Tm/.4);px=lp(D.c0.x,p0.x+u.x*1.1,k);pz=lp(D.c0.z,p0.z+u.z*1.1,k);py=Math.sin(k*PI)*.2;b.tgt=PZ.reach;b.rate=14}
+else if(Tm<1.1){const k=ez((Tm-.4)/.7);px=lp(p0.x+u.x*1.1,p0.x+u.x*.35,k);pz=lp(p0.z+u.z*1.1,p0.z+u.z*.35,k);py=Math.sin(k*PI)*.7;b.tgt=PZ.lean;b.rate=10}
+else{const sw=Math.sin(Tm*7)*.05*(Tm<7.5?1:.3);px=p0.x+u.x*(.35-.25*sst(5.5,7.8,Tm))+u.z*sw;pz=p0.z+u.z*(.35-.25*sst(5.5,7.8,Tm))-u.x*sw;b.tgt=Tm<5.5?PZ.lean:PZ.scream;b.rate=6}
+b.g.position.set(px,py,pz);b.g.rotation.y=Math.atan2(-u.x,-u.z);b.boost=1.6+fin;
+const claw=Tm>1.3?Math.max(0,Math.sin(Tm*5.2)):0;b.armOff=[claw*.5*(Tm<7.5?1:.3),-claw*.5*(Tm<7.5?1:.3)];b.legOff=[0,0];
+if(b.tgt===PZ.scream)b.tgt=Object.assign({},PZ.scream,{jaw:1.1+Math.abs(Math.sin(Tm*40))*.15,hz:Math.sin(Tm*29)*.2});
+burnAnim(dt,t);
+const ev=D.ev;
+if(!ev.l&&Tm>.35){ev.l=1;if(!A.sfx('ritmon',1,true)){A.shriek(1.3,1.2);A.fireRoar(1.2)}shake=Math.max(shake,.7)}
+if(!ev.i&&Tm>1.1){ev.i=1;A.thud();A.boom(1.3);shake=1;D.flash=.7;embers(px,.4,pz,50);A.crackle(3)}
+for(const [i,tc] of [[1,1.9],[2,2.7],[3,3.5],[4,4.5],[5,5.4]]){if(!ev['c'+i]&&Tm>tc){ev['c'+i]=1;const c=$('clw');c.style.transform='rotate('+((R()-.5)*50|0)+'deg) scaleX('+(R()<.5?-1:1)+')';c.classList.remove('on');void c.getBoundingClientRect();c.classList.add('on');A.hit();A.n(.2,3500,600,.5,'bandpass',null,2);shake=Math.max(shake,.5);D.flash=.35;ev.bp=cam.position;_bp.set(cam.position.x,cam.position.y+.1,cam.position.z);bloodBurst(_bp,_bz,3,.15)}}
+if(Tm>.6&&Tm<7.7){D.hb-=dt;if(D.hb<=0){A.heart();D.hb=lp(1.0,.34,sst(.6,7.7,Tm));D.pulse=1}}
+if(Tm>1.2&&Tm<7.7){D.gs-=dt;if(D.gs<=0){D.gs=lp(.9,.4,sst(1.2,7,Tm))+R()*.2;A.n(.3,1500,350,.3,'bandpass',null,2);if(R()<.5)A.crackle(2)}}
+if(!ev.d&&Tm>7.7){ev.d=1;if(A.c&&A.m)A.m.gain.setTargetAtTime(.03,A.c.currentTime,.04)}
+if(!ev.j&&Tm>8){ev.j=1;if(A.c&&A.m){A.m.gain.cancelScheduledValues(A.c.currentTime);A.m.gain.setValueAtTime(A.mute?0:A.vol,A.c.currentTime)}A.jump2();A.boom(1.6);A.shriek&&A.shriek(1.4,1.2);A.fireRoar(1.4);shake=1;D.flash=1;embers(px,1.2,pz,80)}
+if(Tm>9.2&&A.c&&A.m&&!ev.f){ev.f=1;A.m.gain.setTargetAtTime(0,A.c.currentTime,.8)}
+D.pulse=Math.max(0,D.pulse-dt*3.2);
+if(Tm>4.4&&Tm<7.9){D.bk-=dt;if(D.bk<=0){D.bk=lp(1.3,.4,sst(4.4,7.8,Tm))+R()*.2;D.blink=1}}
+D.blink=Math.max(0,D.blink-dt*5);D.flash=Math.max(0,D.flash-dt*5);
+const bl=Tm<8.1?.5*Math.pow(sst(5.2,8,Tm),1.1):lp(.5,1,sst(8.25,8.95,Tm)),F=POST.on?POST.mFinal.uniforms:null;
+if(F){F.uBlood.value=bl;F.uWarp.value=(.002+.008*sst(3,8,Tm)+.004*fin)*(1+D.pulse*.5);F.uFlash.value=Math.max(0,D.flash*.6);F.uPulse.value=D.pulse;F.uVig.value=.42+.6*sst(3,8,Tm)}
+else{const bb=$('bld');bb.style.opacity=bl;bb.style.setProperty('--b',bl)}
+const cf=$('cflash');cf.style.background=(D.blink>0&&D.flash<=.05)?'#000':(Tm>7.9?'#fff':'#ff8a30');cf.style.opacity=(D.blink>0&&D.flash<=.05)?Math.min(1,D.blink*1.1):Math.min(1,D.flash*.9);
+if(Tm>9.45&&!D.shown){D.shown=true;showDead('It burns for her.')}}
+function bdCam(dt){const D=BD;if(!D.on||!BZ)return;if(D.shown&&D.T>10.8)return;const Tm=D.T,u=D.u,t=performance.now()/1000,b=BZ;
+const fk=ez((Tm-.4)/.7),fall=Tm<.4?0:Math.min(1,(Tm-.4)/.7),y=lp(D.y0,.28,fall*fall)+(Tm>1.1?Math.exp(-(Tm-1.1)*5)*Math.abs(Math.sin((Tm-1.1)*14))*.12:0);
+const back=.5*ez((Tm-.4)/.7);D.cp.set(D.p0.x-u.x*back,y,D.p0.z-u.z*back);
+const HW=_cv[8];b.hd.getWorldPosition(HW);HW.y+=.05;
+const look=_cv[13].copy(HW);if(Tm<.4)look.lerp(_cv[9].set(HW.x,HW.y-.3,HW.z),0);
+if(!D.lk)D.lk=new T.Vector3().copy(look);D.lk.lerp(look,1-Math.exp(-Math.min(dt,.05)*(Tm<1.1?14:9)));
+const sh=(.004+.012*sst(3,8,Tm)+.05*(Tm>8?1:0))*(1+D.pulse*.6)+Math.max(0,shake)*.02;
+const pos=_cv[10].copy(D.cp);pos.x+=nsy(t*3,1)*sh;pos.y+=nsy(t*3,2)*sh;pos.z+=nsy(t*3,3)*sh;
+cam.position.copy(pos);cam.up.set(0,1,0);cam.lookAt(D.lk);
+if(Tm<.35){const q=cam.quaternion.clone();cam.quaternion.copy(D.q0).slerp(q,ez2(Tm/.35))}
+const roll=Math.sin(t*1.3)*.03+lp(0,-.18,sst(6,8,Tm))+nsy(t*4,9)*.015*sst(2,8,Tm)+(Tm>8?Math.sin(t*50)*.03:0);cam.rotateZ(roll);
+cam.fov=lp(74,60,sst(4,7.9,Tm))+D.pulse*1.2+(Tm>8?ez((Tm-8)/.12)*10:0);cam.updateProjectionMatrix();
+/* his hands push up against its chest and weaken */
+const gr=Tm>1.1?ez((Tm-1.1)/.5):0,wk=1-sst(6.2,7.6,Tm),st=gr*wk;
+CINE.hands.visible=true;CINE.hands.userData.H.forEach((h,i)=>{const s=i?1:-1,ph=i*2.1;h.position.set(lp(s*.22,s*.14+Math.sin(Tm*10+ph)*.04*st,gr),lp(-.42,-.2+Math.sin(Tm*12+ph)*.03*st,gr)-(1-wk)*.2,lp(-.3,-.45+Math.sin(Tm*9+ph)*.03*st,gr));h.scale.set(1,1,.3);h.rotation.set(lp(-.3,-.5,gr)+Math.sin(Tm*11+ph)*.2*st+(1-wk)*.7,s*-.2,s*.3)});
+const fl_=R()<(.06+.2*sst(3,8,Tm))?.2:1;AMB.intensity*=fl_*(.85+.15*nsy(t*3,2));POOL.forEach(o=>{o.L.intensity*=fl_*(.5+.5*R())});
+spot.intensity=(R()<.35?0:1.3)*(1-sst(5.5,7,Tm)*.6);
+BL.intensity=(2.2+2.8*sst(4,8,Tm)+3*(Tm>8?1:0))*(R()<.1?.4:1);BL.color.setHex(0xff6a22);BL.position.set(HW.x-u.x*.2,HW.y-.3,HW.z-u.z*.2);
+A.lis(cam);if(Tm>9.6&&document.pointerLockElement)document.exitPointerLock()}
 /* ================= MAIN LOOP ================= */
 /* ---- one jumpscare at a time, never the same one twice in a row, 18s apart ---- */
 const SG={t:0,hist:[]};
-function scBusy(){return !!((G.lc&&G.lc.on&&G.lc.st>0)||JS.on||SCX.on||SQ.k||RS.st===2||RS.st===3||(JC.on&&JC.mode==='glitch')||G.st==='dying')}
+function scBusy(){return !!((G.lp&&G.lp.on)||JS.on||SCX.on||SQ.k||RS.st===2||RS.st===3||(JC.on&&JC.mode==='glitch')||G.st==='dying')}
 const ONCE=new Set();
 function scMark(k){SG.t=performance.now();SG.hist.push(k);if(SG.hist.length>6)SG.hist.shift()}
 function scTry(k,fn){if(scBusy()||ONCE.has(k)||performance.now()-SG.t<18000||SG.hist.slice(-3).includes(k))return false;const r=fn();if(r!==false){scMark(k);ONCE.add(k)}return r!==false}
@@ -2567,49 +2647,100 @@ SQ.s=(SQ.s||0)-dt;if(SQ.s<=0){SQ.s=.1;A.pos(b.g.position.x,.4,b.g.position.z);A.
 const d=H(P.x-b.g.position.x,P.z-b.g.position.z);if(d<2.4&&!SQ.d){SQ.d=1;A.shriek(.9,.6);jcStart('flash',.2,'#fa6');shake=.8;noiseEv(8)}
 if(t>2.4||(SQ.d&&d>6)){embers(b.g.position.x,.6,b.g.position.z,50);b.g.visible=false;b.armOff=[0,0];b.legOff=[0,0];b.g.position.y=0;SQ.k='';blackout(.3)}return}}
 
-/* ================= THE LONG CELLAR: after the key, the way out stretches into a 110 m corridor, and the burned one hunts you through it and up the hall ================= */
-const LC={X0:200,X1:312,Z:160,W:1.3,XS:304,XL:200.7,slab:null};
-function lcArm(){G.lc={on:true,st:0,t:0,cr:false,bt:5,bs:0,stk:0,sd:0,ev:0}}
-function buildLong(){const z0=LC.Z-LC.W,z1=LC.Z+LC.W,X0=LC.X0,X1=LC.X1,Z=LC.Z;
-room(X0,z0,X1,z1,MC,2.8);wall('x',z0,X0,X1,[],2.8,MC);wall('x',z1,X0,X1,[],2.8,MC);wall('z',X0,z0,z1,[],2.8,MC);wall('z',X1,z0,z1,[],2.8,MC);
-for(let x=X0+7;x<X1-6;x+=7){const sd=((x-X0)/7|0)%2?1:-1;bx(.45,2.8,.45,MC,x,1.4,Z+sd*(LC.W-.24),'w')}
-for(let x=X0+10;x<X1-4;x+=12){vlamp(x,2.45,Z,(((x-X0)/12|0)%2)?0xb02818:0xc02010,.75,1,10)}
-for(let x=X0+14;x<X1-8;x+=19){const sd=((x-X0)/19|0)%2?1:-1;bx(1.1,2.1,.08,MDR,x,1.05,Z+sd*(LC.W-.2));decal(TX.blood,x,Z+sd*.5,1.2,R()*6)}
-for(let x=X0+4;x<X1-4;x+=5.5){if(R()<.55)decal(TX.blood,x,Z+(R()-.5)*1.4,.8+R()*1.2,R()*6);if(R()<.35)web(x,2.6,Z+(R()<.5?-1:1)*(LC.W-.1),R()<.5?0:PI)}
-TX.runW=mk(512,256,(g,w,h)=>{g.clearRect(0,0,w,h);g.font='bold 170px Georgia, serif';g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';g.fillStyle='rgba(70,0,0,.92)';g.strokeStyle='rgba(30,0,0,.9)';g.lineWidth=6;g.strokeText('RUN',w/2,h*.42);g.fillText('RUN',w/2,h*.42);for(let i=0;i<22;i++){const x=w*.14+R()*w*.72,y=h*.5+R()*h*.2,len=30+R()*100,gr=g.createLinearGradient(0,y,0,y+len);gr.addColorStop(0,'rgba(80,0,0,.9)');gr.addColorStop(1,'rgba(50,0,0,0)');g.fillStyle=gr;g.fillRect(x,y,2+R()*3,len)}});
-TX.hand=mk(128,128,(g,w,h)=>{g.clearRect(0,0,w,h);g.fillStyle='rgba(85,0,0,.85)';g.beginPath();g.ellipse(64,86,26,30,0,0,7);g.fill();for(let f=0;f<5;f++){const a=-.9+f*.45,L=f===0||f===4?34:48;g.save();g.translate(64+(f-2)*11,66);g.rotate(a*.5+(f===0?-.5:f===4?.5:0));g.beginPath();g.ellipse(0,-L/2,5.5,L/2,0,0,7);g.fill();g.restore()}for(let i=0;i<5;i++){const x=40+R()*48,y=100+R()*10,len=20+R()*50;g.fillRect(x,y,2.5,len)}});
-for(const sd of[-1,1]){const wz=Z+sd*(LC.W-.16),ry=sd<0?0:PI;for(let x=X0+16;x<X1-14;x+=23+(sd>0?11:0)){const m=new T.Mesh(new T.PlaneGeometry(1.9,.95),new T.MeshBasicMaterial({map:TX.runW,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));m.position.set(x,1.55,wz);m.rotation.y=ry;W.add(m)}
-for(let x=X0+6;x<X1-6;x+=4.3+R()*3){const m=new T.Mesh(new T.PlaneGeometry(.38,.38),new T.MeshBasicMaterial({map:TX.hand,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));m.position.set(x,.9+R()*.9,wz);m.rotation.y=ry;m.rotation.z=(R()-.5)*.8;W.add(m)}}
-for(let x=X0+2;x<X1-2;x+=2.6){decal(TX.blood,x,Z+(R()-.5)*1.2,1.3+R()*1.6,R()*6);if(R()<.4){const d=new T.Mesh(new T.PlaneGeometry(1.4,1.4),new T.MeshBasicMaterial({map:TX.blood,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));d.rotation.x=PI/2;d.rotation.z=R()*6;d.position.set(x+R(),2.78,Z+(R()-.5)*1.4);W.add(d)}}
-const slab=bx(.1,2.2,1.1,MDR,X1-.24,1.1,Z);slab.userData.dyn=1;LC.slab=slab;
-const rc=new T.Mesh(new T.PlaneGeometry(1.1,2.2),new T.MeshBasicMaterial({color:0x000000}));rc.rotation.y=-PI/2;rc.position.set(X1-.16,1.1,Z);W.add(rc);
-const XL=LC.X0;const lad=ladder(XL+.22,Z,0,3,-1);lad.rotation.y=PI/2;
-{const hp=new T.Mesh(new T.PlaneGeometry(.95,.95),new T.MeshBasicMaterial({color:0x010102}));hp.rotation.x=PI/2;hp.position.set(XL+.68,2.795,Z);W.add(hp);
-bx(.1,.09,1.15,MFR,XL+.18,2.755,Z);bx(.1,.09,1.15,MFR,XL+1.18,2.755,Z);bx(1.1,.09,.1,MFR,XL+.68,2.755,Z-.5);bx(1.1,.09,.1,MFR,XL+.68,2.755,Z+.5);
-vlamp(XL+.9,2.3,Z,0xc03020,.9,1,9)}
-addInt(XL+.75,1.4,Z,'Climb the ladder up',()=>climb('up'),null,2.5)}
-function lcCr(x,z){const b=burnGet();b.g.visible=true;b.g.position.set(x,0,z);b.boost=1.4;setPose(b,'crawl',true);RS.st=4;return b}
-function lcTick(dt){const L=G.lc;if(!L||!L.on)return;const tm=performance.now()/1000;
-if(G.st==='dying')return;
-if(G.st!=='play')return;G.rj=Math.max(G.rj,6);
-if(L.st===0){if(G.ev.exit&&P.lvl===1&&P.x<61.6&&P.x>58&&Math.abs(P.z-10)<1.7&&!P.cb){L.st=1;L.t=0;P.x=LC.XS;P.z=LC.Z+cl(P.z-10,-.6,.6);blackout(.6);msg('That was the last door. RUN!',3600);obj('RUN. Climb the ladder at the far end of the cellar, then reach the front door.')}return}
-L.t+=dt;
-if(L.st===1&&!L.cr&&L.t>2.6){L.cr=true;if(LC.slab)LC.slab.visible=false;lcCr(LC.X1-1.1,LC.Z);slamSnd();A.shriek(1.2,1.2);A.boom(1.1);shake=Math.max(shake,.9);jcStart('flash',.25,'#a22');L.bt=7}
-if(L.st===1){if(!L.ev&&P.x<256){L.ev=1;blackout(1.1);L.bs=1.6}else if(L.ev===1&&P.x<228){L.ev=2;A.shriek(.9,.9);A.boom(.9);shake=Math.max(shake,.6);for(const l of lamps)if(l.x>200)l.kill=Math.max(l.kill||0,2.5)}}
-if(L.st===2&&!L.cr&&P.lvl===0&&P.z<14){L.cr=true;lcCr(0,20.8);A.boom(1.1);A.shriek(1.1,1.1);shake=Math.max(shake,.7);jcStart('flash',.2,'#a22');L.bt=6}
-if(!L.cr)return;
-const b=BZ,bp=b.g.position,gx=P.x-bp.x,gz=P.z-bp.z,gap=Math.hypot(gx,gz)||1;
+/* ================= THE LONG PATH: take the altar key -> the ritual door slams, something screams, every light dies and the house bleeds red. Open the ritual door again and the cellar is gone: it opens onto a plain hallway in another dimension, the ritual chamber is the only room left, and she comes out of the door behind you. ================= */
+const LPX={W:2.5,len:122,H:2.8};let LPS=null,LPG=null;
+const yawD=(a,b)=>((b-a+PI)%(2*PI)+2*PI)%(2*PI)-PI;
+/* the ritual chamber, as the long path sees it (world units) */
+const LPR={x0:61.8,x1:72.4,z0:3.7,z1:16.3},lpIn=(x,z)=>x>=61.9&&x<=LPR.x1&&z>=LPR.z0&&z<=LPR.z1;
+/* the altar key is in hand: hold the door, then run the blood event (see lpBlood) */
+function lpArm(){G.lp={on:true,st:0,t:0,lk:false,sw:0,ct:0,door:0,door2:0,gs:0,stun:0,bt:6,bs:0,hb:0,sd:0,dd:0,ph:0,wo:false,sl:0,lt:0};if(RITD)RITD.hold=1;slamProbe()}
+function lpTex(){if(TX.lpPic)return;const mkp=()=>mk(128,160,(g,w,h)=>{const q=g.createLinearGradient(0,0,0,h);q.addColorStop(0,'#4a3a26');q.addColorStop(1,'#1c140c');g.fillStyle=q;g.fillRect(0,0,w,h);g.fillStyle='rgba(10,6,3,.55)';g.beginPath();g.ellipse(w/2,h*.38,24,30,0,0,7);g.fill();g.beginPath();g.moveTo(w*.18,h);g.quadraticCurveTo(w/2,h*.5,w*.82,h);g.fill();g.fillStyle='rgba(168,140,96,.55)';g.beginPath();g.ellipse(w/2,h*.37,17,22,0,0,7);g.fill();stn(g,w,h,30,'60,40,20',.25,20);nz(g,w,h,500,.25)});TX.lpPic=[mkp(),mkp(),mkp()]}
+/* the hallway starts at the ritual door (x=XE) and runs west to the ladder. The chamber's own west wall is its end wall. */
+function lpBuild(Z,XE){lpTex();const hw=LPX.W/2,XW=XE-LPX.len,z0=Z-hw,z1=Z+hw,Hh=LPX.H,brass=new T.MeshStandardMaterial({color:0xb08a3a,metalness:1,roughness:.35,envMap:envT});
+room(XW,z0,XE,z1,MFL,Hh);wall('x',z0,XW,XE,[],Hh,MWL);wall('x',z1,XW,XE,[],Hh,MWL);wall('z',XW,z0,z1,[],Hh,MWL);
+/* runner rug + dado rails */
+{const L=LPX.len-8,rg=new T.PlaneGeometry(1.1,L),u=rg.attributes.uv;for(let i=0;i<4;i++)u.setY(i,u.getY(i)*(L/3));const rug=new T.Mesh(rg,new T.MeshStandardMaterial({map:TX.rug,bumpMap:TX.rug,bumpScale:1.2,roughness:1}));rug.rotation.order='YXZ';rug.rotation.set(-PI/2,PI/2,0);rug.position.set(XE-LPX.len/2,.012,Z);rug.receiveShadow=true;W.add(rug)}
+bx(LPX.len,.07,.05,MDR,XE-LPX.len/2,1.0,z0+.175);bx(LPX.len,.07,.05,MDR,XE-LPX.len/2,1.0,z1-.175);
+const dd=(x,sd)=>{const zc=Z+sd*(hw-.19);bx(1.0,2.1,.07,MDR,x,1.05,zc);bx(1.22,.14,.1,MDR,x,2.17,zc);bx(.11,2.2,.1,MDR,x-.555,1.1,zc);bx(.11,2.2,.1,MDR,x+.555,1.1,zc);const kn=new T.Mesh(new T.SphereGeometry(.035,10,8),brass);kn.position.set(x-.38,1.0,zc+(sd>0?-.06:.06));W.add(kn)};
+const pic=(x,sd,i)=>{bx(.62,.82,.05,MDR,x,1.55,Z+sd*(hw-.175));const m=new T.Mesh(new T.PlaneGeometry(.5,.7),new T.MeshStandardMaterial({map:TX.lpPic[i%3],roughness:.9}));m.position.set(x,1.55,Z+sd*(hw-.203));if(sd>0)m.rotation.y=PI;W.add(m)};
+for(let i=0,x=XE-12;x>XW+10;i++,x-=14){const sd=i%2?1:-1;dd(x,sd);pic(x-7,-sd,i)}
+lamp(XE-2.6,2.55,Z,0xffc890,.9,0,11);for(let x=XE-8;x>XW+6;x-=11)lamp(x,2.55,Z,0xffc890,.9,0,11);
+/* the ladder at the far end */
+const lad=ladder(XW+.22,Z,0,3,-1);lad.rotation.y=PI/2;
+{const hp=new T.Mesh(new T.PlaneGeometry(.95,.95),new T.MeshBasicMaterial({color:0x010102}));hp.rotation.x=PI/2;hp.position.set(XW+.68,2.795,Z);W.add(hp);
+bx(.1,.09,1.15,MFR,XW+.18,2.755,Z);bx(.1,.09,1.15,MFR,XW+1.18,2.755,Z);bx(1.1,.09,.1,MFR,XW+.68,2.755,Z-.5);bx(1.1,.09,.1,MFR,XW+.68,2.755,Z+.5);lamp(XW+.9,2.3,Z,0xc89050,.9,0,9)}
+addInt(XW+.75,1.4,Z,'Climb the ladder up',()=>climb('up'),null,2.5)}
+/* a copy of the part of a merged mesh that lies inside the ritual chamber (shares the vertex buffers, only the index differs) */
+function lpSplit(o){const g=o.geometry;if(!g.boundingBox)g.computeBoundingBox();const bb=g.boundingBox;if(bb.max.x<LPR.x0||bb.min.x>LPR.x1||bb.max.z<LPR.z0||bb.min.z>LPR.z1)return null;
+const pos=g.attributes.position,idx=g.index.array,out=[];
+for(let i=0;i<idx.length;i+=3){const a=idx[i],b=idx[i+1],c=idx[i+2],cx=(pos.getX(a)+pos.getX(b)+pos.getX(c))/3,za=pos.getZ(a),zb=pos.getZ(b),zc=pos.getZ(c),zn=Math.min(za,zb,zc),zx=Math.max(za,zb,zc);if(cx>=LPR.x0&&cx<=LPR.x1&&zx>=LPR.z0&&zn<=LPR.z1)out.push(a,b,c)}
+if(!out.length)return null;const ng=new T.BufferGeometry();for(const k in g.attributes)ng.setAttribute(k,g.attributes[k]);ng.setIndex(new T.BufferAttribute(new g.index.array.constructor(out),1));
+const m=new T.Mesh(ng,o.material);m.castShadow=o.castShadow;m.receiveShadow=o.receiveShadow;m.renderOrder=o.renderOrder;m.matrixAutoUpdate=false;m.updateMatrix();m.userData.split=1;return m}
+/* the world is swapped while every light is out: the ritual chamber stays exactly as it is (floor, walls, altar, candles, blood, its door) and everything else, cellar included, is gone. A plain hallway now stands behind the ritual door. */
+function lpSwap(){const D=RITD,Z=D.z,XE=D.x,XW=XE-LPX.len;
+for(const l of lamps){l.sel=0;l.slot=null}for(const s of POOL)s.vl=null;
+const O={W,C,ints,doors,lamps,solids,trig,falls,hides,swings};LPS=Object.assign({X0:XW,Z,XE,XL:XW+.7,mv:[]},O);
+G.lpWk=G.wk;G.wk=1e9; /* the ghost must not wake and wander off on its own while we are in the other dimension */
+/* the player is always inside the chamber for the swap */
+if(!lpIn(P.x,P.z)||P.x<XE+.6){P.x=XE+2.2;P.z=Z;P.vx=0;P.vz=0}
+const kC=O.C.filter(c=>c.x1>=LPR.x0&&c.x0<=LPR.x1&&c.z1>=LPR.z0&&c.z0<=LPR.z1);
+W.visible=false;LPG=new T.Group();scene.add(LPG);W=LPG;
+C=kC;ints=O.ints.filter(i=>i.p&&lpIn(i.p.x,i.p.z));doors=[D];lamps=O.lamps.filter(l=>lpIn(l.x,l.z));solids=[];trig=[];falls=[];hides=[];swings=[];
+scene.add(gmesh.g);scene.add(gmesh.light);gh.st='dormant';gh.vis=false;if(typeof BZ!=='undefined'&&BZ&&BZ.g)BZ.g.visible=false;RS.st=0;RS.on=false;
+lpBuild(Z,XE);const ms=mergeStatic(LPG);ms.forEach(m=>{m.matrixAutoUpdate=false;m.updateMatrix()});solids=ms.filter(m=>!m.material.transparent);
+/* carry the chamber across: loose objects (door leaf, altar box, sprites, writing on the walls) by position, merged static geometry by triangle */
+for(const o of O.W.children.slice()){if(o===gmesh.g||o===gmesh.light)continue;
+if(o.isMesh&&!o.isInstancedMesh&&!o.isSkinnedMesh&&o.geometry&&o.geometry.index&&!Array.isArray(o.material)&&!o.userData.dyn&&o.position.lengthSq()===0){const s=lpSplit(o);if(s){LPG.add(s);if(!s.material.transparent)solids.push(s)}}
+else if(lpIn(o.position.x,o.position.z)){LPG.add(o);LPS.mv.push(o)}}
+P.pitch=0;P.hid=null;P.cb=null}
+function lpRestore(){const S=LPS;if(!S)return;for(const l of lamps){l.sel=0;l.slot=null}for(const s of POOL)s.vl=null;
+for(const o of S.mv)S.W.add(o);
+if(LPG){scene.remove(LPG);LPG.traverse(o=>{if(o.geometry&&!o.isSprite&&!o.userData.split)o.geometry.dispose()});LPG=null}
+W=S.W;C=S.C;ints=S.ints;doors=S.doors;lamps=S.lamps;solids=S.solids;trig=S.trig;falls=S.falls;hides=S.hides;swings=S.swings;W.visible=true;W.add(gmesh.g);W.add(gmesh.light);LPS=null;if(G.lpWk!==undefined){G.wk=G.lpWk;G.lpWk=undefined}}
+function lpReset(){if(LPS){try{scene.remove(LPS.W);LPS.W.traverse(o=>{if(o.geometry&&!o.isSprite)o.geometry.dispose()})}catch(e){}LPS=null}if(LPG){scene.remove(LPG);LPG=null}if(gmesh){scene.remove(gmesh.g);scene.remove(gmesh.light)}}
+function lpGhost(dt,spd,tm){const g=gh;g.x-=spd*dt;g.z=LPS.Z+Math.sin(tm*2.3)*.22;g.face=Math.atan2(P.x-g.x,P.z-g.z);g.mvg=spd>.3;g.spd=spd;g.d=H(P.x-g.x,P.z-g.z);g.vis=false;g.lvl=1;lpBurn(dt,tm,spd);
+L_sd(dt,spd,g)}
+/* the thing that chases you down the hall is the burned one, on all fours */
+function lpBurn(dt,tm,spd){const b=burnGet(),g=gh;b.g.visible=true;b.g.position.set(g.x,Math.abs(Math.sin(tm*17))*.05,g.z);b.g.rotation.y=Math.atan2(P.x-g.x,P.z-g.z);b.tgt=PZ.crawl;b.rate=8;b.boost=1.3;const ph=tm*(9+spd*1.6);b.armOff=[Math.sin(ph)*.6,-Math.sin(ph)*.6];b.legOff=[-Math.sin(ph)*.5,Math.sin(ph)*.5]}
+function L_sd(dt,spd,g){const L=G.lp;L.sd-=dt;if(L.sd<=0&&spd>.5){L.sd=.2;A.pos(g.x,.4,g.z);A.n(.05,4200,1200,.5,'bandpass',A.p,3)}
+for(const l of lamps)if(Math.abs(l.x-g.x)<7)l.kill=Math.max(l.kill||0,.16)}
+/* the blood event, frame-driven so it pauses with the game: the camera swings to the door, the door slams, every light dies, a scream, the house turns blood red (RUN written on the walls) and the hallway is built behind the door while it is dark */
+function lpBlood(L){const D=RITD;
+if(L.ph===0&&L.t>=.15){L.ph=1;L.wo=D.open;D.fast=0;if(!L.wo)D.sw(true);if(!P.hid&&!P.cb)G.turn={t:0,d:.8,h:L.wo?.9:2.1,y0:P.yaw,p0:P.pitch};L.sl=L.t+(L.wo?.9:1.8);return}
+if(L.ph===1&&L.t>=L.sl){L.ph=2;if(Math.abs(P.x-D.x)<1&&Math.abs(P.z-D.z)<1.3)P.x=D.x+1.1;
+D.fast=1;D.open=false;D.cl.on=true;slamSnd();shake=Math.max(shake,.7);msg('The door slams shut behind you.',3000);L.lk=true;L.lt=L.t+1.1;return}
+if(L.ph===2&&L.t>=L.lt){L.ph=3;G.blood=1;for(const l of lamps)l.kill=Math.max(l.kill||0,4.2);G.runM=G.runM||hrBuild();blackout(3.5);A.scream(1.5);A.shriek(1.2,1.7);A.boom(.9);shake=Math.max(shake,.9);setTimeout(()=>{D.fast=0},900);return}
+if(L.ph===3&&L.t>=L.lt+.5){L.ph=4;lpSwap();return}
+if(L.ph===4&&L.t>=L.lt+2.7){L.ph=5;L.st=2;L.t=0;L.lk=false;D.hold=0;D.fast=0;obj('Leave the ritual room.')}}
+function lpTick(dt){
+if(G.lpHatch&&G.st==='play'&&P.lvl===0&&P.z<14){G.lpHatch=0;gh.aggr=Math.max(gh.aggr,1.6);appear(0,21.2,.7,'chase');A.boom(1.1);A.shriek(1.1,1.1);shake=Math.max(shake,.7);jcStart('flash',.2,'#a22')}
+const L=G.lp;if(!L||!L.on)return;if(G.st!=='play')return;L.t+=dt;const tm=performance.now()/1000;
+/* 0: the blood event (door held shut) */
+if(L.st===0){lpBlood(L);return}
+/* 2: the chamber is all that is left. The ritual door opens onto an ordinary, quiet hallway: walk */
+if(L.st===2){
+if(!L.dd&&RITD.open&&RITD.a>.3){L.dd=1;A.boom(.5);A.o(70,40,2.2,.25,'sine');shake=Math.max(shake,.25);msg('The door opens onto a hallway that was never in this house.',4200);obj('Follow the hallway.')}
+if(P.x<LPS.XE-17&&P.lvl===1&&!P.cb&&!P.hid){L.st=3;L.t=0;L.ct=0;L.lk=true;L.y0=P.yaw;L.yW=L.y0+yawD(L.y0,-PI/2)}return}
+/* 3: still walking forward, the camera is dragged round: the ritual door slams, then bursts open and she is coming */
+if(L.st===3){L.ct+=dt;const T_=L.ct,k1=ez2(T_/1.6);let yw=L.y0+(L.yW-L.y0)*k1;if(T_>3.2)yw=L.yW+(L.y0-L.yW)*ez2((T_-3.2)/1);
+P.yaw=yw;P.pitch=lp(P.pitch,-.02,.1);mv(P,-(T_<3.2?1.7*(1-.35*ez(T_/3)):2.4)*dt,0,.3,true);
+if(T_>=.5&&!L.door){L.door=1;RITD.fast=1;RITD.open=false;RITD.cl.on=true;slamSnd();shake=Math.max(shake,.8);for(const l of lamps)if(l.x>LPS.XE-26)l.kill=Math.max(l.kill||0,.4)}
+if(T_>=1.5&&!L.door2){L.door2=1;RITD.fast=1;RITD.sw(true);A.boom(.9);shake=Math.max(shake,.6)}
+if(T_>=1.7&&!L.gs){L.gs=1;gh.st='lp';gh.hp=100;gh.x=LPS.XE+1.2;gh.z=LPS.Z;gh.face=-PI/2;gh.vis=true;gh.lvl=1;gh.mvg=true;A.shriek(1.2,1.2);A.boom(.9);jcStart('flash',.18,'#a22')}
+if(L.gs)lpGhost(dt,lp(1.6,4.2,ez(cl((T_-1.7)/2.2,0,1))),tm);
+if(T_>=4.8){L.st=4;L.t=0;L.lk=false;L.bt=6;L.bs=0;RITD.fast=0;obj('RUN. Get to the ladder at the end of the hall.');const r=$('runTxt');if(r){r.classList.remove('on');void r.offsetWidth;r.classList.add('on')}A.heart()}
+return}
+/* 4: the run. She never tires, she surges, she grabs */
+if(L.st===4){const gap=gh.x-P.x;
+if(P.cb){gh.mvg=false;gh.d=H(P.x-gh.x,P.z-gh.z);return}
 L.bt-=dt;if(L.bt<=0){L.bt=6+R()*5;L.bs=1.1;A.shriek(.5,.5);shake=Math.max(shake,.3)}L.bs-=dt;
-const spd=cl(3.1+(gap-9)*.3,2.2,5.6)+(L.bs>0?2.2:0),ox=bp.x,oz=bp.z,o={x:ox,z:oz};mv(o,gx/gap*spd*dt,gz/gap*spd*dt,.3,true);
-L.stk=(Math.hypot(o.x-ox,o.z-oz)<spd*dt*.3)?L.stk+dt:0;bp.x=o.x;bp.z=o.z;b.g.rotation.y=Math.atan2(gx,gz);
-const ph=tm*spd*3.4;b.tgt=PZ.crawl;b.armOff=[Math.sin(ph)*.6,-Math.sin(ph)*.6];b.legOff=[-Math.sin(ph)*.5,Math.sin(ph)*.5];bp.y=Math.abs(Math.sin(ph))*.05;
-L.sd-=dt;if(L.sd<=0){L.sd=.2;A.pos(bp.x,.4,bp.z);A.n(.05,4200,1200,.5,'bandpass',A.p,3)}
+let spd=cl(3.1+(gap-9)*.3,2.2,5.6)+(L.bs>0?2.2:0);if(L.stun>0){L.stun-=dt;spd=0}
+lpGhost(dt,spd,tm);
 if(gap<9){L.hb=(L.hb||0)-dt;if(L.hb<=0){L.hb=.9;A.heart()}}
-if(gap<1.1&&!P.dead){gh.x=bp.x;gh.z=bp.z;gh.lvl=P.lvl;b.g.visible=false;die();return}
-if(L.st===2&&(P.z<-9||L.stk>3.5||P.lvl!==0)){embers(bp.x,.6,bp.z,40);b.g.visible=false;b.armOff=[0,0];b.legOff=[0,0];bp.y=0;L.cr=false;L.on=false}}
-function lcUp(){const L=G.lc;if(!L)return;L.st=2;L.t=0;L.cr=false;L.stk=0;if(BZ){BZ.g.visible=false;BZ.armOff=[0,0];BZ.legOff=[0,0]}obj('RUN. Down the hall to the front door.');msg('It is right behind you. Get to the front door!',3500)}
+if(gap<1.1&&!P.dead){die({burn:[gh.x,gh.z]});return}}}
+function lpUp(){const L=G.lp;L.on=false;L.st=9;gh.st='dormant';gh.vis=false;gh.hp=100;G.blood=1;for(const l of lamps)l.kill=Math.max(l.kill||0,4.2);G.runM=G.runM||hrBuild();blackout(3.5);{const bz=burnGet();bz.g.visible=false;bz.armOff=[0,0];bz.legOff=[0,0];bz.g.position.y=0}obj('RUN. Down the hall to the front door.');msg('It is right behind you. Get to the front door!',3500)}
 function scSched(dt){const sx=G.sx;sx.cd=Math.max(0,(sx.cd||0)-dt);SCT-=dt;if(SCT>0)return;SCT=1.1;const gp=prog(),age=(performance.now()-G.t0)/1000;
-if(gp<1||age<50||(G.lc&&G.lc.st>0)||SQ.k||RS.st>=2||JS.on||P.cb||P.hid||P.sr>0||tn>.55||boT>0||sx.cd>0)return;
+if(gp<1||age<50||(G.lp&&G.lp.on)||SQ.k||RS.st>=2||JS.on||P.cb||P.hid||P.sr>0||tn>.55||boT>0||sx.cd>0)return;
 if(gp>=1&&R()<.5&&scTry('closet',closetScare))return;if(gp>=2&&age>110&&P.lvl===0&&Math.abs(P.x)<1.7&&P.z>1&&P.z<17&&R()<.5&&scTry('drop',dropScare))return}
 function scUpd(dt){jcUpd(dt);if(G.st!=='play')return;const tm=performance.now()/1000;strobe=1;if(!SCX.on||RS.st<2)SCX.on=false;
 if(!SQ.k||!SQ.lock)scSched(dt);
@@ -2622,7 +2753,7 @@ let last=performance.now(),lastPl=false,lastHd=false,accT=0,accN=0,QB=0,QG=0,las
 function loop(t){requestAnimationFrame(loop);const dt=Math.min((t-last)/1000,.05);last=t;fr++;
 const pl=G.st==='play';if(pl!==lastPl){lastPl=pl;document.body.classList.toggle('playing',pl);accT=accN=0}
 const hd=!!(P.hid&&P.hs==='on');if(hd!==lastHd){lastHd=hd;document.body.classList.toggle('hid',hd)}
-if(G.st==='play'||G.st==='dying'){update(dt);if(CINE.on)cineCam(dt);for(const d of doors)d.upd(dt);for(const s of swings)s.upd(dt);
+if(G.st==='play'||G.st==='dying'){update(dt);if(CINE.on)cineCam(dt);if(BD.on)bdCam(dt);for(const d of doors)d.upd(dt);for(const s of swings)s.upd(dt);
 if(pl){accT+=dt;accN++;if(accN>=45){const av=accT/accN;accT=0;accN=0;if(av>.021)QB++;else QB=0;if(av<.0125)QG++;else QG=0;if(t-lastPRt>2500){if(QB>=2&&pr>PRMIN+.01){setPR(Math.max(PRMIN,Math.round((pr-.25)*4)/4));lastPRt=t;QB=0}else if(QB>=3&&pr<=PRMIN+.01&&PERFL<3){perfDown();lastPRt=t;QB=0}else if(QG>=6&&pr<PRMAX-.01){setPR(Math.min(PRMAX,pr+.25));lastPRt=t;QG=0}}}}}
 else if((G.st==='menu'||G.st==='intro')&&W){P.yaw=Math.sin(t/4000)*.12;P.lvl=0;cam.position.set(0,1.6,12+Math.sin(t/6000)*1.2);cam.rotation.set(0,P.yaw,0);pw=1;lampUpd(dt);dustUpd(dt);
 gh.st='stare';gh.lvl=0;gh.x=0;gh.z=-5.5;gh.face=0;gh.d=20;gh.vis=Math.sin(t/1900)>.975||Math.sin(t/731)>.998;ghostAnim(dt)}
