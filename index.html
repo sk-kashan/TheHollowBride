@@ -733,9 +733,9 @@ let held=null;
 
 /* ===== first-person key (equipped from the inventory) and the lock animation ===== */
 let heldKey=null,KEYH=null,KEYC='';const KU={on:false,t:0,k:null,fn:null,did:0,hole:null,sx:0,sz:0,eq:0,mvOk:true,s1:0,s2:0,s3:0};
-function makeKeyHand(c){const g=new T.Group(),piv=new T.Group();g.rotation.order='YXZ';g.add(piv);
+function makeKeyHand(c,kind){const g=new T.Group(),piv=new T.Group();g.rotation.order='YXZ';g.add(piv);
 const lea=new T.MeshStandardMaterial({color:0x1a1a1d,roughness:.55,map:TX.leather,bumpMap:TX.leather,bumpScale:1.3,envMap:envT,envMapIntensity:.3}),slv=new T.MeshStandardMaterial({color:0x2a3029,roughness:1,map:TX.cloth,bumpMap:TX.cloth,bumpScale:1.2});
-const key=mkKey(c);key.rotation.set(0,0,0);key.scale.setScalar(1.7);piv.add(key);
+const key=mkKey(c,kind);key.rotation.set(0,0,0);key.scale.setScalar(1.7);piv.add(key);
 const V=(x,y,z)=>new T.Vector3(x,y,z),seg=(a,b,r0,r1,m,par)=>{const d=b.clone().sub(a),L=d.length(),e=new T.Mesh(new T.CylinderGeometry(r1,r0,L,10),m);e.position.copy(a).addScaledVector(d,.5);e.quaternion.setFromUnitVectors(V(0,1,0),d.normalize());(par||piv).add(e);return e};
 const ball=(p,sx,sy,sz)=>{const e=new T.Mesh(new T.SphereGeometry(1,14,10),lea);e.position.copy(p);e.scale.set(sx,sy,sz);piv.add(e);return e};
 ball(V(-.15,-.052,.012),.05,.034,.042);
@@ -745,7 +745,7 @@ for(let i=0;i<3;i++)seg(V(-.115-i*.022,-.06,.04),V(-.125-i*.022,-.098,.022),.009
 const dir=V(-.8,-.5,.45).normalize(),wr=V(-.19,-.07,.04);
 seg(wr,wr.clone().addScaledVector(dir,.06),.036,.033,lea,g);seg(wr.clone().addScaledVector(dir,.05),wr.clone().addScaledVector(dir,.62),.042,.06,slv,g);
 g.userData.piv=piv;return g}
-function equipKey(n){if(KU.on||!inv.keys.has(n)||n==='fuse')return;if(!KEYH||KEYC!==n){if(KEYH)cam.remove(KEYH);KEYH=makeKeyHand(new T.Color(KC[n]||'#c9a45a').getHex());KEYC=n;KEYH.visible=false;cam.add(KEYH)}heldKey=n;KU.eq=0;setHeld('key');A.o(520,320,.05,.12,'triangle')}
+function equipKey(n){if(KU.on||!inv.keys.has(n)||n==='fuse')return;if(!KEYH||KEYC!==n){if(KEYH)cam.remove(KEYH);KEYH=makeKeyHand(new T.Color(KC[n]||'#c9a45a').getHex(),n);KEYC=n;KEYH.visible=false;cam.add(KEYH)}heldKey=n;KU.eq=0;setHeld('key');A.o(520,320,.05,.12,'triangle')}
 /* a key must be in your hand to use it: equip it from the inventory (Tab) */
 function keyReady(k){if(KU.on)return false;if(held==='key'&&heldKey===k&&KEYH)return true;msg('Equip the '+(KN[k]||'key')+' from your inventory (Tab), then use it on the lock.',3600);A.o(200,120,.2,.2,'square');return false}
 function keyAnim(k,fn,hole){const H=hole||{x:P.x-Math.sin(P.yaw)*.8,y:1.1,z:P.z-Math.cos(P.yaw)*.8};let nx=P.x-H.x,nz=P.z-H.z;if(H.nx!==undefined){nx=H.nx;nz=H.nz}const L=Math.hypot(nx,nz)||1;nx/=L;nz/=L;
@@ -952,10 +952,29 @@ g.fillStyle='rgba(70,40,15,.22)';for(let i=0;i<4;i++){g.beginPath();g.arc(R()*w,
 if(R()<.5){g.fillStyle='rgba(95,8,8,.7)';g.beginPath();g.ellipse(w*(.3+R()*.5),h*(.3+R()*.5),5+R()*8,4+R()*6,0,0,7);g.fill()}nz(g,w,h,700,.18)});
 TX.pap=[mkPaperTex(),mkPaperTex(),mkPaperTex()];
 TX.ammoL=mk(128,64,(g,w,h)=>{g.fillStyle='#4d5a2a';g.fillRect(0,0,w,h);g.fillStyle='#d8c38a';g.fillRect(8,8,w-16,h-16);g.fillStyle='#2a3015';g.font='bold 20px sans-serif';g.fillText('9mm',14,34);g.font='10px sans-serif';g.fillText('50 ROUNDS',14,50);g.fillStyle='#8a2418';g.fillRect(8,8,w-16,6);nz(g,w,h,300,.2)});
-const mkKey=c=>{const mt=new T.MeshStandardMaterial({color:c,map:TX.mwr,roughness:.36,metalness:1,envMap:envT,envMapIntensity:1,bumpMap:TX.mwr,bumpScale:.4}),gs=[];
-const tor=(r,t,x,z)=>{const q=new T.TorusGeometry(r,t,10,22);q.rotateX(PI/2);q.translate(x,0,z);gs.push(q)},cyl=(rt,rb,len,x)=>{const q=new T.CylinderGeometry(rt,rb,len,12);q.rotateZ(PI/2);q.translate(x,0,0);gs.push(q)},bxg=(w,h,d,x,z)=>{const q=new T.BoxGeometry(w,h,d);q.translate(x,0,z);gs.push(q)};
+const mkKey=(c,kind)=>{kind=kind||'brass';const RG={brass:.36,silver:.2,cellar:.6,rusty:.75,locker:.28,gate:.55,exit:.3},mt=new T.MeshStandardMaterial({color:c,map:TX.mwr,roughness:RG[kind]||.36,metalness:kind==='rusty'?.7:1,envMap:envT,envMapIntensity:1,bumpMap:TX.mwr,bumpScale:kind==='rusty'?.8:.4}),gs=[];
+const tor=(r,t,x,z,sx)=>{const q=new T.TorusGeometry(r,t,10,22);q.rotateX(PI/2);if(sx)q.scale(sx,1,1);q.translate(x,0,z);gs.push(q)},cyl=(rt,rb,len,x)=>{const q=new T.CylinderGeometry(rt,rb,len,12);q.rotateZ(PI/2);q.translate(x,0,0);gs.push(q)},bxg=(w,h,d,x,z,ry)=>{const q=new T.BoxGeometry(w,h,d);if(ry)q.rotateY(ry);q.translate(x,0,z);gs.push(q)},dsc=(r,h,x,z)=>{const q=new T.CylinderGeometry(r,r,h,18);q.translate(x,0,z);gs.push(q)},sph=(r,x,z)=>{const q=new T.SphereGeometry(r,12,10);q.translate(x,0,z);gs.push(q)};
+if(kind==='silver'){/* slim skeleton key: long oval bow, fine shaft, three-tooth comb bit */
+tor(.011,.0045,-.105,0,1.7);cyl(.0042,.0042,.15,-.015);cyl(.0075,.0075,.005,-.07);cyl(.0068,.0068,.005,-.05);
+bxg(.004,.0035,.016,.052,.011);bxg(.004,.0035,.016,.044,.011);bxg(.004,.0035,.012,.036,.009);bxg(.028,.0035,.005,.044,.0045)}
+else if(kind==='cellar'){/* old iron cellar key: square frame bow, thick short shaft, one big block bit */
+bxg(.034,.006,.005,-.1,.0145);bxg(.034,.006,.005,-.1,-.0145);bxg(.005,.006,.034,-.1175,0);bxg(.005,.006,.034,-.0825,0);cyl(.0072,.0072,.09,-.02);cyl(.0105,.0105,.01,-.062);
+bxg(.026,.007,.022,.04,.012);bxg(.01,.007,.01,.034,.026)}
+else if(kind==='rusty'){/* crude T-handle key: heavy cross-bar, ridged shaft, twin long teeth */
+bxg(.012,.011,.07,-.105,0);sph(.0075,-.105,.035);sph(.0075,-.105,-.035);cyl(.0072,.0072,.12,-.04);for(let i=0;i<4;i++)cyl(.0092,.0092,.004,-.08+i*.016);
+bxg(.005,.008,.026,.026,.016);bxg(.005,.008,.02,.04,.013);bxg(.026,.008,.005,.033,.0045)}
+else if(kind==='locker'){/* modern flat steel key: round flat head with hole, flat blade, zig-zag cuts */
+dsc(.02,.004,-.085,0);tor(.0075,.0025,-.088,0);bxg(.012,.004,.012,-.062,0);bxg(.1,.0035,.011,-.005,0);
+bxg(.006,.0035,.005,.03,.0075);bxg(.006,.0035,.005,.017,.0075);bxg(.006,.0035,.005,.004,.0075);bxg(.006,.0035,.005,-.009,.0075);bxg(.006,.0035,.004,.023,-.0075);bxg(.006,.0035,.004,.01,-.0075)}
+else if(kind==='gate'){/* heavy iron gate key: huge ring bow, long thick shaft, two big bits */
+tor(.03,.0085,-.12,0);cyl(.0085,.0085,.19,-.012);cyl(.0125,.0125,.008,-.075);cyl(.0105,.0105,.006,-.058);
+bxg(.036,.008,.03,.07,.018);bxg(.012,.008,.02,.045,.024);bxg(.02,.008,.012,.058,-.012)}
+else if(kind==='exit'){/* ornate front-door key: diamond bow, orb on the shaft, E-shaped bit */
+for(const sy of[1,-1])for(const sx of[1,-1])bxg(.026,.0055,.0045,-.108+sx*.0095,sy*.0095,sx*sy*PI/4);sph(.0065,-.108,0);cyl(.0055,.0055,.11,-.04);sph(.0095,-.05,0);cyl(.0085,.0085,.005,-.075);
+bxg(.004,.004,.024,.058,.0105);bxg(.004,.004,.02,.048,.0085);bxg(.004,.004,.024,.038,.0105);bxg(.02,.004,.005,.048,.0035)}
+else{/* brass library key: trefoil bow, collared shaft, notched bit */
 tor(.0125,.0052,-.1,0);tor(.0125,.0052,-.082,.0145);tor(.0125,.0052,-.082,-.0145);cyl(.0052,.0052,.118,0);cyl(.0085,.0085,.006,-.058);cyl(.0072,.0072,.005,-.036);cyl(.0072,.0072,.005,-.012);
-bxg(.03,.0035,.017,.044,.0105);bxg(.007,.0035,.008,.062,.0165);bxg(.007,.0035,.008,.052,.0215);bxg(.007,.0035,.006,.036,.0215);
+bxg(.03,.0035,.017,.044,.0105);bxg(.007,.0035,.008,.062,.0165);bxg(.007,.0035,.008,.052,.0215);bxg(.007,.0035,.006,.036,.0215)}
 const m=new T.Mesh(mergeGeoms(gs),mt);m.castShadow=true;const g=new T.Group();g.add(m);g.rotation.y=R()*6.28;g.scale.setScalar(1.25);return g};
 function mkFlashItem(){const g=new T.Group(),E={envMap:envT},dk=new T.MeshStandardMaterial(Object.assign({color:0x26292d,roughness:.42,metalness:.9,envMapIntensity:.9},E)),rub=new T.MeshStandardMaterial({color:0x111214,roughness:.85}),chr=new T.MeshStandardMaterial(Object.assign({color:0xb9bdc2,roughness:.25,metalness:1},E)),lens=new T.MeshStandardMaterial(Object.assign({color:0xfff2d0,emissive:0xfff0c8,emissiveIntensity:.55,roughness:.1,metalness:0,envMapIntensity:1.2},E));
 const add=(geo,m,x,rz,ry)=>{const o=new T.Mesh(geo,m);o.rotation.z=rz||0;if(ry)o.rotation.y=ry;o.position.x=x;o.castShadow=true;g.add(o);return o};
@@ -976,7 +995,7 @@ const lid=new T.Mesh(new T.BoxGeometry(.13,.012,.075),[cb,cb,lab,cb,cb,cb]);lid.
 function readNote(t,txt){G.st='read';$('note').textContent=txt;$('read').classList.add('on');(inv.nt||(inv.nt={}))[t]=txt;if(inv.notes.indexOf(t)<0)inv.notes.push(t)}
 function noteInt(x,y,z,t,txt,fn){const it=addInt(x,y,z,'Read the '+t,()=>{readNote(t,txt);fn&&fn()},mkPaperMesh());it.mesh.rotation.y=R()*3;return it}
 const give=(k,x)=>{inv.keys.add(k);A.pick();msg('Picked up: '+KN[k])};
-function keyInt(x,y,z,k,c,fn){const it=addInt(x,y,z,'Take the '+KN[k],()=>{take(it);give(k);fn&&fn()},mkKey(c));return it}
+function keyInt(x,y,z,k,c,fn){const it=addInt(x,y,z,'Take the '+KN[k],()=>{take(it);give(k);fn&&fn()},mkKey(c,k));return it}
 function ammoInt(x,y,z,n){const it=addInt(x,y,z,'Take ammunition',()=>{take(it);inv.res+=n;A.pick();msg('+'+n+' pistol rounds')},mkAmmoBox());return it}
 class Door{constructor(ax,x,z,key,s,m,th,nm){this.ax=ax;this.x=x;this.z=z;this.key=key;this.locked=!!key;this.s=s||1;this.a=0;this.open=false;this.nm=nm;this.num=(nm==='front'||nm==='back'||nm==='vault')?0:++Door.n;const w=1.4;th=th||.1;this.g=new T.Group();
 const me=new T.Mesh(bg(ax==='z'?th:w,2.5,ax==='z'?w:th),m||MDR);me.castShadow=true;me.receiveShadow=false;
@@ -998,7 +1017,7 @@ for(const sd of[-1,1]){const pq=new T.Mesh(new T.PlaneGeometry(.17,.17),pm),o=sd
 const kn=new T.Mesh(new T.SphereGeometry(.032,10,8),km),o2=sd*(th/2+.045);if(hz)kn.position.set(o2,1.05,w-.14);else kn.position.set(w-.14,1.05,o2);g.add(kn)}}
 sw(o){this.open=o;this.cl.on=!o;A.doorSnd(o,this.x,this.z)}upd(dt){const tg=this.open?1.55:0,f=this.fast;this.v=this.v||0;this.v+=((tg-this.a)*(f?240:26)-this.v*(f?26:7.5))*dt;this.a+=this.v*dt;if(this.a<0){this.a=0;this.v=f?Math.abs(this.v)*.18:0}if(this.a>1.62){this.a=1.62;this.v=-Math.abs(this.v)*.2}this.g.rotation.y=this.a*this.s}}
 Door.n=0;Door.tex={};Door.km=null;
-const N=[[0,-6],[0,-2],[0,3],[0,9],[0,15],[0,19.2],[-6,-2],[-6,-6],[7,-2],[5,-6],[-6,9],[-6,13],[6,8],[6,12],[60,2],[60,7],[60,10],[60,14],[60,18],[56,7],[53,7],[64,10],[67,10],[54,16],[63.6,1],[13.6,12.1,'y'],[19,15,'y'],[19,5,'y'],[19,-3,'y'],[19,25,'y'],[10,29,'y'],[0,30,'y'],[-10,29,'y'],[-18,25,'y'],[-9,36,'y'],[-11,41,'y'],[0,41,'y'],[11,45,'y'],[17.5,36,'y'],[22,32,'y'],[-17,19,'y'],[-17,8,'y'],[-17,-3,'y'],[-25,-4,'y'],[-23.5,-1.5,'y'],[-24,8.5,'g'],[-22.5,14.5,'g'],[0,-11,'f'],[0,-19,'f'],[9,-16,'f'],[-9,-16,'f'],[16,-14,'f'],[-16,-14,'f'],[0,-28,'f'],[10,-28,'f'],[-10,-28,'f'],[0,-33,'f']],adj=[],adjT=[];
+const N=[[0,-6],[0,-2],[0,3],[0,9],[0,15],[0,19.2],[-6,-2],[-6,-6],[7,-2],[5,-6],[-6,9],[-6,13],[6,8],[6,12],[60,2],[60,7],[60,10],[60,14],[60,18],[56,7],[53,7],[64,10],[67,10],[54,16],[63.6,1],[13.6,12.1,'y'],[19,15,'y'],[19,5,'y'],[19,-3,'y'],[19,25,'y'],[10,29,'y'],[0,30,'y'],[-10,29,'y'],[-18,25,'y'],[-9,36,'y'],[-11,41,'y'],[0,41,'y'],[11,45,'y'],[17.5,36,'y'],[22,32,'y'],[-17,19,'y'],[-17,8,'y'],[-17,-3,'y'],[-25,-4,'y'],[-23.5,-1.5,'y'],[-24,8.5,'g'],[-22.5,14.5,'g'],[0,-11,'f'],[0,-19,'f'],[9,-16,'f'],[-9,-16,'f'],[16,-14,'f'],[-16,-14,'f'],[0,-28,'f'],[10,-28,'f'],[-10,-28,'f'],[0,-33,'f'],[-13,6],[-13,11],[-13,16.5]],adj=[],adjT=[];
 const nl=n=>n[0]>30?1:((n[2]==='y'&&!G.yard)||(n[2]==='f'&&!G.fyard)||(n[2]==='g'&&!G.gard))?-1:0;
 function bfs(a,b){/* A*: shortest route over the nav nodes, avoiding locked doors; wide (ghost-sized) edges first */
 const lk=doors.filter(d=>d.locked),blk=(i,j)=>{const ax=N[i][0],az=N[i][1],ex=N[j][0]-ax,ez=N[j][1]-az,l2=ex*ex+ez*ez||1;for(const d of lk){const t=cl(((d.x-ax)*ex+(d.z-az)*ez)/l2,0,1);if(H(ax+ex*t-d.x,az+ez*t-d.z)<.9)return true}return false};
@@ -1010,11 +1029,11 @@ function build(){
 if(W){scene.remove(W);W.traverse(o=>{if(o.geometry&&!o.isSprite)o.geometry.dispose()})}DRW.length=0;W=new T.Group();scene.add(W);C=[];ints=[];doors=[];lamps=[];solids=[];trig=[];falls=[];hides=[];swings=[];GL=null;GEN=null;SPL.length=0;POOL.forEach(s=>{s.vl=null;s.f=0;s.L.intensity=0});
 MWL=mat(TX.wall);MFL=mat(TX.floor);MC=mat(TX.conc);MCP=mat(TX.ceil,0x9a958a);MDR=mat(TX.cwood,0x6a5238);MW=mat(TX.floor,0xa08868);MB=mat(TX.books);const MCE=mat(TX.wall,0x777777);MFR=mat(TX.floor,0x5a4430);MWD=mat(TX.floor,0x6e4b30);MWI=mat(TX.floor,0x2e2217);MSI=mat(TX.conc,0x4a504d);MBED=mat(TX.dress,0xb7b0a0);MBED2=mat(TX.dress,0x8a4a46);MS=new T.MeshStandardMaterial({color:0x6d7a72,roughness:.5,metalness:.55,envMap:envT,envMapIntensity:.6,bumpMap:TX.wall,bumpScale:.2});MSR=new T.MeshStandardMaterial({color:0x7a5a46,roughness:.7,metalness:.4,map:TX.conc,envMap:envT,envMapIntensity:.3,bumpMap:TX.conc,bumpScale:.8});
 /* hall, rooms */
-room(-2,-8,2,20.4,MFL);room(-2,21.6,2,22,MFL);room(-2,20.4,-.6,21.6,MFL);room(.6,20.4,2,21.6,MFL);{const rg=new T.PlaneGeometry(1.7,24.4),u=rg.attributes.uv;for(let i=0;i<4;i++)u.setY(i,u.getY(i)*8);const rug=new T.Mesh(rg,new T.MeshStandardMaterial({map:TX.rug,bumpMap:TX.rug,bumpScale:1.2,roughness:1}));rug.rotation.x=-PI/2;rug.position.set(0,.012,5.1);rug.receiveShadow=true;W.add(rug)}room(-10,-8,-2,3,MFL);room(-10,3,-2,16,MFL);room(2,-8,12,3,MFL);room(2,3,10,14,MFL);room(-14,8,-10,14,MFL);
+room(-2,-8,2,20.4,MFL);room(-2,21.6,2,22,MFL);room(-2,20.4,-.6,21.6,MFL);room(.6,20.4,2,21.6,MFL);{const rg=new T.PlaneGeometry(1.7,24.4),u=rg.attributes.uv;for(let i=0;i<4;i++)u.setY(i,u.getY(i)*8);const rug=new T.Mesh(rg,new T.MeshStandardMaterial({map:TX.rug,bumpMap:TX.rug,bumpScale:1.2,roughness:1}));rug.rotation.x=-PI/2;rug.position.set(0,.012,5.1);rug.receiveShadow=true;W.add(rug)}room(-10,-8,-2,3,MFL);room(-10,3,-2,16,MFL);room(2,-8,12,3,MFL);room(2,3,10,14,MFL);room(-16,3,-10,20,MFL);
 wall('z',-2,-8,22,[[-2.7,-1.3],[8.3,9.7]]);wall('z',2,-8,22,[[-2.7,-1.3],[8.3,9.7]]);wall('x',-8,-2,2,[[-.7,.7]]);wall('x',22,-2,2);wall('x',18,-2,2,[[-.7,.7]]);
 wall('z',-10,-8,3);wall('x',-8,-10,-2);wall('x',3,-10,-2);wall('z',-10,3,16,[[10.3,11.7]]);wall('x',16,-10,-2);
 wall('z',12,-8,3);wall('x',-8,2,12);wall('x',3,2,12);wall('z',10,3,14,[[11.4,12.8]]);wall('x',14,2,10);
-wall('z',-14,8,14);wall('x',8,-14,-10);wall('x',14,-14,-10);
+wall('z',-16,3,20);wall('x',3,-16,-10);wall('x',20,-16,-10);wall('z',-10,16,20);
 /* basement */
 room(58,-2,62,20,MC,2.8);room(50,2,58,12,MC,2.8);room(62,4,72,16,MC,2.8);
 wall('z',58,-2,20,[[6.3,7.7],[16.8,18.2]],2.8,MC);wall('z',62,-2,20,[[.3,1.7],[9.3,10.7]],2.8,MC);wall('x',-2,58,62,[],2.8,MC);wall('x',20,58,62,[],2.8,MC);
@@ -1074,6 +1093,7 @@ const lev=addInt(-9.3,1.35,9.55,'Pull the crooked book',()=>{take(lev);dSec.lock
 /* hidden room */
 altarT(-13.1,11);noteInt(-13.1,.92,11,'Hollow Bride','THE HOLLOW BRIDE\nEleanor Voss, 1893. Left at the altar, bricked in below in her wedding dress.\n\nShe hunts by sound and by light. Crouch. Go dark. Hide.\nBullets stagger her; they do not end her.\n\nThe iron key to the front door lies sealed in a box on her altar, past the rusty door (Door 8).\n\nThe box wants five artifacts of the Voss family. Four are scattered through the house and grounds. The last is locked away with the old family valuables.');
 ammoInt(-13.5,.95,10.5,6);decal(TX.blood,-12.2,11,2,1);web(-13.8,2.7,8.2,PI/4);
+for(const pz of[5.6,8.3,14.3,17]){F(3,.45,.6,-13,pz);F(3,1,.18,-13,pz-.27,.95)}lamp(-13,2.4,5,0xff6a30,.7,1,8);lamp(-13,2.4,17,0xff6a30,.7,1,8);web(-15.7,2.7,3.3,PI/4);web(-10.4,2.7,19.7,-PI/4);decal(TX.blood,-13,16,2.2,1.2);
 /* storage */
 shelving(9.55,5.5);cabinet({x:9.6,z:9,w:.9,d:.5,h:1.9,face:'w',kind:'steel',doors:1,hinge:'r'});cabinet({x:9.6,z:10.15,w:.9,d:.5,h:1.9,face:'w',kind:'steel',doors:2,hide:1,label:'Hide in the locker',ov:'vent',cy:1.45});web(2.2,2.8,3.3,PI/4);
 {const b=new T.Mesh(new T.CylinderGeometry(.35,.35,.9,12),MW);b.castShadow=true;b.position.set(7,.45,12.8);W.add(b);col(6.6,12.4,7.4,13.2,'f')}
@@ -1112,7 +1132,7 @@ buildYards();
 /* ghost */
 gmesh=mkGhost();gmesh.g.userData.dyn=1;W.add(gmesh.g);W.add(gmesh.light);
 /* graph */
-try{const _ms=mergeStatic(W);_ms.forEach(m=>{m.matrixAutoUpdate=false;m.updateMatrix()});solids=_ms.filter(m=>!m.material.transparent);OD=_ms.filter(m=>{if(!m.geometry.boundingBox)m.geometry.computeBoundingBox();const b=m.geometry.boundingBox;return (b.min.x>14||b.max.x<-16||b.min.z>24||b.max.z<-10)&&b.max.x<40});ODV=true}catch(e){console.warn('merge skipped',e)}try{CRT.forEach(c=>{c.items.length=0});placeAll()}catch(e){console.warn('placeAll failed',e);try{['flash','brass','silver','hammer','cellar','fuse','rusty','gate'].forEach(placeItem)}catch(e2){}}try{settleItems()}catch(e){console.warn('settle skipped',e)}
+try{const _ms=mergeStatic(W);_ms.forEach(m=>{m.matrixAutoUpdate=false;m.updateMatrix()});solids=_ms.filter(m=>!m.material.transparent);OD=_ms.filter(m=>{if(!m.geometry.boundingBox)m.geometry.computeBoundingBox();const b=m.geometry.boundingBox;return (b.min.x>14||b.max.x<-16||b.min.z>24||b.max.z<-10)&&b.max.x<40});ODV=true}catch(e){console.warn('merge skipped',e)}try{CRT.forEach(c=>{c.items.length=0});placeAll()}catch(e){console.warn('placeAll failed',e);try{CRT.forEach(c=>{c.items.length=0});safePlaceKeys()}catch(e2){console.warn(e2)}}try{settleItems()}catch(e){console.warn('settle skipped',e)}
 buildAdj();
 }
 /* ================= REAL CABINETS, BED, HIDING SPOTS ================= */
@@ -1155,7 +1175,7 @@ const spot={x,z,fx:x+1.5,fz:z,cam:{x,y:.24,z,yaw:-PI/2,pit:0},out:{x:x+1.2,z,yaw
 function fadeTo(o,s){const f=$('fade');f.style.transition='opacity '+s+'s';f.style.background='#000';f.style.opacity=o}
 function tryHide(s){if(P.cb||P.hid||G.st!=='play'||JS.on||SCX.on)return;
 if(gh.vis&&gh.lvl===P.lvl&&(gh.st==='chase'||gh.st==='rush'||gh.st==='stare')&&gh.ls&&gh.d<22){msg('She is looking right at you. You cannot hide!',1800);A.o(200,120,.2,.2,'square');return}
-P.hid=s;P.hs='in';P.ht=0;s.f1=0;s.sw.forEach(w=>w.tgt=1);A.creak();if(!G.hinted){G.hinted=1;setTimeout(()=>msg(MOB?'Press HOLD BREATH when she is close.':'Hold SPACE to hold your breath when she is close.',3800),900)}}
+P.hid=s;s.sus=(s.sus||0)+1;P.hs='in';P.ht=0;s.f1=0;s.sw.forEach(w=>w.tgt=1);A.creak();if(!G.hinted){G.hinted=1;setTimeout(()=>msg(MOB?'Press HOLD BREATH when she is close.':'Hold SPACE to hold your breath when she is close.',3800),900)}}
 function exitHide(){const s=P.hid;if(!s||P.hs!=='on')return;if(gh.vis&&gh.lvl===P.lvl&&gh.st!=='dormant'&&gh.st!=='gone'&&H(gh.x-P.x,gh.z-P.z)<7&&los(gh.x,gh.z,P.x,P.z,true))A.talk(2,true);P.hs='out';P.ht=0;P.hd=false;P.hold=false;s.f1=0;s.sw.forEach(w=>w.tgt=1);A.creak()}
 function hideUpd(dt){const s=P.hid;if(!s){P.hd=false;return}P.ht+=dt;
 if(P.hs==='in'){if(P.ht>.3&&!s.f1){s.f1=1;fadeTo(1,.18)}if(P.ht>.5){P.x=s.cam.x;P.z=s.cam.z;P.y=s.cam.y;P.yaw=s.cam.yaw;P.pitch=s.cam.pit;s.sw.forEach(w=>w.tgt=0);fl.on=false;$('hide').className='on '+s.ov;fadeTo(0,.3);P.hs='on';P.ht=0;P.hd=true;P.br=100;P.vx=P.vz=0;A.thud()}}
@@ -1187,14 +1207,14 @@ const RELIC=[{k:'locket',n:"Eleanor's Locket",t:'Two portraits inside. One face 
 let HX={g:null,eyes:[],ropes:[],fog:[],flames:[],swing:null,lt:0,lt2:20,tw:0},SP={},CRT=[],BAR=[],RELS=[],DBACK=null,GATE=null,SC=null,OUTK=0,WK=0,HV=0,SL=0,OD=[],ODV=true,YC=[],DRW=[],BONUS=new Set(),ambT=6,PLK=null,NAILM=null,NAILGX=null,NAILGZ=null,CMAT=null;
 const ITM={
 flash:{off:.023,lab:'Take the flashlight',mesh:()=>mkFlashItem(),get(){fl.own=true;A.pick();msg('Flashlight acquired. Press F.')}},
-brass:{lab:'Take the Brass Key',mesh:()=>mkKey(0xd4a437),get(){give('brass');obj('Try the doors along the hall (Door 3 is locked).');G.ev.brass=1;setTimeout(()=>{if(G.st==='play'){gh.st==='dormant'&&(gh.st='wander',spawnFar());scare('corridor')}},9000)}},
-silver:{lab:'Take the Silver Key',mesh:()=>mkKey(0xcfd2d6),get(){give('silver')}},
+brass:{lab:'Take the Brass Key',mesh:()=>mkKey(0xd4a437,'brass'),get(){give('brass');obj('Try the doors along the hall (Door 3 is locked).');G.ev.brass=1;setTimeout(()=>{if(G.st==='play'){gh.st==='dormant'&&(gh.st='wander',spawnFar());scare('corridor')}},9000)}},
+silver:{lab:'Take the Silver Key',mesh:()=>mkKey(0xcfd2d6,'silver'),get(){give('silver')}},
 hammer:{off:.032,lab:'Take the Hammer',mesh:()=>{const h=makeHammer(false);h.rotation.z=PI/2;h.scale.setScalar(.8);const o=new T.Group();o.add(h);return o},get(){inv.hammer=true;A.pick();msg('Picked up: Hammer. Press E at boarded planks to break them.');obj('Planks seal the back door of the storage room. Break them.');setHeld('hammer')}},
 fuse:{lab:'Take the Fuse',mesh:()=>mkFuseItem(),get(){give('fuse');obj('The generator is below, through the cellar.')}},
-rusty:{lab:'Take the Rusty Key',mesh:()=>mkKey(0x8a4a22),get(){give('rusty')}},
-cellar:{lab:'Take the Cellar Key',mesh:()=>mkKey(0x8a9a7a),get(){give('cellar');obj('The cellar door (Door 5) is at the end of the hall.');if(G.ev.cellar++<1)setTimeout(()=>G.st==='play'&&scare('face'),2500)}},
-locker:{lab:'Take the Locker Key',mesh:()=>mkKey(0x7d868f),get(){give('locker');obj('The gun locker is in the cellar, on the west wall of the generator room.')}},
-gate:{lab:'Take the Gate Key',mesh:()=>mkKey(0x7b8084),get(){give('gate');obj(G.ev.door?'Run for the front gate!':'This opens the front gate. First, find a way out through the front door.')}}};
+rusty:{lab:'Take the Rusty Key',mesh:()=>{const k=mkKey(0xc0602a,'rusty');k.scale.setScalar(1.8);k.traverse(o=>{if(o.material){o.material=o.material.clone();o.material.emissive=new T.Color(0xff6a22);o.material.emissiveIntensity=.9}});const g=new T.Group();g.add(k);const m=new T.MeshBasicMaterial({color:0xff7a2a,transparent:true,opacity:.5,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide,fog:false}),bm=m.clone();const disc=new T.Mesh(new T.CircleGeometry(.45,24),m);disc.rotation.x=-PI/2;disc.position.y=.012;g.add(disc);const beam=new T.Mesh(new T.CylinderGeometry(.05,.14,1.3,12,1,true),bm);beam.position.y=.65;g.add(beam);disc.onBeforeRender=()=>{const p=.65+.35*Math.sin(performance.now()/1000*3);m.opacity=.5*p;bm.opacity=.22*p};return g},get(){give('rusty')}},
+cellar:{lab:'Take the Cellar Key',mesh:()=>mkKey(0x8a9a7a,'cellar'),get(){give('cellar');obj('The cellar door (Door 5) is at the end of the hall.');if(G.ev.cellar++<1)setTimeout(()=>G.st==='play'&&scare('face'),2500)}},
+locker:{lab:'Take the Locker Key',mesh:()=>mkKey(0x7d868f,'locker'),get(){give('locker');obj('The gun locker is in the cellar, on the west wall of the generator room.')}},
+gate:{lab:'Take the Gate Key',mesh:()=>mkKey(0x7b8084,'gate'),get(){give('gate');obj(G.ev.door?'Run for the front gate!':'This opens the front gate. First, find a way out through the front door.')}}};
 /* ---------- random spawn roll ---------- */
 function rollSpawns(){CRT=[];BAR.length=0;GRV.length=0;G.vcode=String(1000+Math.floor(R()*9000));G.cgi=[0,2,3,4,5,6,7][Math.floor(R()*7)];G.codeFound=false;G.vaultOpen=false;G.kpFail=0;G.kpLock=0;G.cgSeen=0;const pool=[],used=new Set();
 CRATES_DEF.forEach(d=>{const c=Object.assign({},d,{items:[],done:false,open:false,extra:null,scare:R()<.3,k:'crate'});const r=R();c.extra=r<.28?'ammo':r<.4?'band':null;CRT.push(c);pool.push({k:'crate',c,zone:c.zone})});
@@ -1308,7 +1328,7 @@ for(let i=0;i<7;i++){const b=add(new T.CylinderGeometry(.014,.014,.3+R()*.2,6),b
 const OPENZ=['bed','din','hall'],YARDZ=['yb','ye','sd','gd'],EARLY=['bed','din','hall','lib','sto','hid'],MIDZ=EARLY.concat(YARDZ),
 KEYZ={flash:['bed','din','hall','lib','sto'],brass:EARLY,silver:EARLY,hammer:EARLY,cellar:MIDZ,fuse:MIDZ,rusty:['bas'],locker:MIDZ.concat(['bas'])};
 /* can every item be collected, in some order, given what each door needs? (lib+hidden room: brass, storage: silver, yards: silver+hammer, cellar/basement: cellar key) */
-function spCheck(a){const got=new Set(),ids=Object.keys(a),ok=z=>OPENZ.indexOf(z)>=0||((z==='lib'||z==='hid')&&got.has('brass'))||(z==='sto'&&got.has('silver'))||(YARDZ.indexOf(z)>=0&&got.has('silver')&&got.has('hammer'))||(z==='bas'&&got.has('cellar'));let ch=true;while(ch){ch=false;for(const id of ids)if(!got.has(id)&&ok(a[id].zone)){got.add(id);ch=true}}return got.size===ids.length}
+function spCheck(a){const got=new Set(),ids=Object.keys(a);if(Object.keys(KEYZ).some(k=>k!=='flash'&&!a[k]))return false;const ok=z=>OPENZ.indexOf(z)>=0||((z==='lib'||z==='hid')&&got.has('brass'))||(z==='sto'&&got.has('silver'))||(YARDZ.indexOf(z)>=0&&got.has('silver')&&got.has('hammer'))||(z==='bas'&&got.has('cellar'));let ch=true;while(ch){ch=false;for(const id of ids)if(!got.has(id)&&ok(a[id].zone)){got.add(id);ch=true}}return got.size===ids.length}
 const slotXZ=s=>s.k==='crate'?[s.c.x,s.c.z]:[s.l.x,s.l.z];
 function slotSurface(l){if(!solids.length)return l.y;try{const rc=new T.Raycaster();rc.set(new T.Vector3(l.x,l.y+.45,l.z),new T.Vector3(0,-1,0));rc.far=.95;const h=rc.intersectObjects(solids,false)[0];if(h&&Math.abs(h.point.y-l.y)<=.4)return h.point.y}catch(e){return l.y}return l.y<=.05?l.y:null}
 function placeAll(){const slots=[],FLS=LOOSE_DEF.find(l=>l.zone==='bed'&&l.x===-5&&l.z===.2);CRT.forEach(c=>slots.push({k:'crate',c,zone:c.zone}));LOOSE_DEF.forEach(l=>{if(l===FLS)return;const sy=slotSurface(l);if(sy!==null){l.sy=sy;slots.push({k:'loose',l,zone:l.zone})}});
@@ -1317,8 +1337,10 @@ for(let at=0;at<900&&!best;at++){const D=at<350?8:at<650?5:2.5,cap=at<350?1:2,a=
 for(const id of ids.slice().sort(()=>R()-.5)){const c=slots.filter(s=>KEYZ[id].indexOf(s.zone)>=0&&used.indexOf(s)<0&&(zc[s.zone]||0)<cap&&used.every(u=>{const p=slotXZ(u),q=slotXZ(s);return Math.hypot(p[0]-q[0],p[1]-q[1])>=D}));if(!c.length){fail=true;break}const s=c[R()*c.length|0];a[id]=s;used.push(s);zc[s.zone]=(zc[s.zone]||0)+1}
 if(!fail&&spCheck(a))best=a}
 if(!best){/* safe fallback: old rule set, then fill any gap from the open rooms */best={};const used=new Set();for(const id of ids){let c=slots.filter(s=>!used.has(s)&&KEYZ[id].indexOf(s.zone)>=0&&(id==='gate'||id==='rusty'||OPENZ.indexOf(s.zone)>=0||id==='fuse'||id==='cellar'||id==='locker'));if(!c.length)c=slots.filter(s=>!used.has(s)&&OPENZ.indexOf(s.zone)>=0);const s=c[R()*c.length|0];if(s){best[id]=s;used.add(s)}}}
-if(FLS){FLS.sy=FLS.y;best.flash={k:'loose',l:FLS,zone:'bed'}}SP=best;ids.concat(FLS?['flash']:[]).forEach(placeItem);placeShovel()}
-function placeItem(id){const s=SP[id];if(!s)return;const d=ITM[id];if(s.k==='crate'){s.c.items.push(id);return}const l=s.l,it=addInt(l.x,(l.sy!==undefined?l.sy:l.y)+(d.off||.018),l.z,d.lab,()=>{take(it);d.get()},d.mesh());it.settle=.35;it.mesh.rotation.y+=R()*3}
+if(!spCheck(best)){console.warn('key layout invalid, using safe layout');safePlaceKeys();placeShovel();return}if(FLS){FLS.sy=FLS.y;best.flash={k:'loose',l:FLS,zone:'bed'}}SP=best;ids.concat(FLS?['flash']:[]).forEach(id=>{try{placeItem(id)}catch(e){console.warn('place failed',id,e)}});placeShovel()}
+/* emergency layout: every key goes to a distinct spot in the always-open rooms (bedroom, dining room, hall), so none can be locked away or missing */
+function safePlaceKeys(){const ids=Object.keys(KEYZ).filter(id=>id!=='flash'),FLS=LOOSE_DEF.find(l=>l.zone==='bed'&&l.x===-5&&l.z===.2),sl=[];LOOSE_DEF.forEach(l=>{if(l===FLS||OPENZ.indexOf(l.zone)<0)return;const sy=slotSurface(l);if(sy!==null){l.sy=sy;sl.push({k:'loose',l,zone:l.zone})}});CRT.forEach(c=>{if(OPENZ.indexOf(c.zone)>=0)sl.push({k:'crate',c,zone:c.zone})});sl.sort(()=>R()-.5);const a={};ids.forEach((id,i)=>{if(sl[i])a[id]=sl[i]});if(FLS){FLS.sy=FLS.y;a.flash={k:'loose',l:FLS,zone:'bed'}}SP=a;Object.keys(a).forEach(id=>{try{placeItem(id)}catch(e){console.warn('place failed',id,e)}})}
+function placeItem(id){const s=SP[id];if(!s)return;const d=ITM[id];if(s.k==='crate'){s.c.items.push(id);return}const l=s.l;let mm;try{mm=d.mesh()}catch(e){console.warn('key model failed',id,e);mm=mkKey(0xd4a437,'brass')}const it=addInt(l.x,(l.sy!==undefined?l.sy:l.y)+(d.off||.018),l.z,d.lab,()=>{take(it);d.get()},mm);it.settle=.35;it.mesh.rotation.y+=R()*3}
 function relicMesh(k){const g=new T.Group(),gold=new T.MeshStandardMaterial({color:0xc9a23c,metalness:.9,roughness:.3,emissive:0x3a2a05,envMap:envT}),paper=new T.MeshStandardMaterial({color:0xcbbf9a,roughness:.9,emissive:0x1a160a});
 if(k==='locket'){const a=new T.Mesh(new T.SphereGeometry(.035,12,8),gold);a.scale.y=1.3;g.add(a);const t=new T.Mesh(new T.TorusGeometry(.05,.004,6,16),gold);t.position.y=.06;g.add(t)}
 else if(k==='photo')g.add(new T.Mesh(new T.BoxGeometry(.14,.008,.1),paper));
@@ -1637,7 +1659,7 @@ const st=new T.Mesh(new T.CylinderGeometry(.0395,.0395,.022,18),strap);st.quater
 const sl=new T.Mesh(new T.CylinderGeometry(.058,.045,.6,18),slv);sl.quaternion.copy(q0);sl.position.copy(wr).addScaledVector(dir,.37);g.add(sl);
 g.scale.setScalar(1.25);g.position.set(-.2,-.235,-.4);g.rotation.set(.1,-.08,.03);cam.add(g);TORCH={g,lens:l,led,gl,tk:0,on:false}}
 function updTorch(dt){if(!fl.own)return;if(!TORCH)mkTorch();const q=TORCH,vis=!P.hid&&!(P.sr>0)&&!(P.dg>0)&&!P.cb&&!(P.rl>0&&held==='gun')&&G.st==='play';q.g.visible=vis;if(!vis)return;if(q.on!==fl.on){q.on=fl.on;q.tk=1}q.tk=lp(q.tk,0,Math.min(1,dt*7));const b=Math.sin(P.bob)*.004,sw=Math.cos(P.bob*.5)*.003,sp=P.spr?-.02:0;q.g.position.set(-.2+sw,-.235+b+sp-q.tk*.02,-.4+q.tk*.02);q.g.rotation.set(.1+q.tk*.12,-.08,.03);q.lens.material.emissiveIntensity=fl.on?3:0;q.lens.material.opacity=fl.on?.85:.28;q.led.material.color.setHex(fl.on?0xffffff:0x2a2a2a);q.gl.material.opacity=fl.on?.55:0}
-const zoneAt=(x,z)=>x>=-14.2&&x<-10&&z>=8&&z<=14.2?'hid':x>=-10&&x<-2&&z<3?'bed':x>=-10&&x<-2&&z<=16?'lib':x>=2&&x<=12.2&&z<3?'din':x>=2&&x<=10.2&&z<=14.2?'sto':x>-2&&x<2?'hall':'x';
+const zoneAt=(x,z)=>x>=-16.2&&x<-10&&z>=3&&z<=20.2?'hid':x>=-10&&x<-2&&z<3?'bed':x>=-10&&x<-2&&z<=16?'lib':x>=2&&x<=12.2&&z<3?'din':x>=2&&x<=10.2&&z<=14.2?'sto':x>-2&&x<2?'hall':'x';
 function useBand(){if(G.st!=='play'&&G.st!=='inv')return;if(!(inv.band>0)){msg('You have no bandages.');return}if(P.hp>=100){msg('You are not hurt.');return}inv.band--;P.hp=Math.min(100,P.hp+40);A.rustle();A.pick();msg('Bandage applied. +40 health ('+inv.band+' left)')}
 function drwUse(o){o.open=!o.open;A.creak();if(o.open&&!o.looted){o.looted=true;const z=zoneAt(o.x0,o.z0);setTimeout(()=>{const r=R();if(!BONUS.has(z)&&r<.3){BONUS.add(z);if(r<.2){const n=2+(R()*2|0);inv.res+=n;A.pick();msg('Found: '+n+' pistol rounds'+(inv.gun?'':' (you have no pistol yet)'))}else{inv.band=(inv.band||0)+1;A.pick();msg('Found: a bandage. Press H or open the inventory (Tab) to use it.')}}else{A.rustle();msg(['Empty.','Only dust and moth wings.','A few rusty pins.'][R()*3|0])}},450)}}
 function drwUpd(dt){for(const o of DRW){const tg=o.open?1:0;if(Math.abs(o.t-tg)<.002)continue;o.t=lp(o.t,tg,Math.min(1,dt*7));o.g.position.set(o.x0+o.dx*o.t*.3,o.g.position.y,o.z0+o.dz*o.t*.3)}}
@@ -1750,7 +1772,7 @@ const wh=new T.Mesh(new T.TorusGeometry(.17,.022,8,18),MS);wh.rotation.y=PI/2;wh
 W.add(new T.Mesh(mergeGeoms(gs),new T.MeshStandardMaterial({color:0x14240f,roughness:.2,metalness:.3,envMap:envT,envMapIntensity:.8})));bx(.5,1.7,6.4,MWD,50.4,.85,16.2,'f');
 for(const bz of[[54.2,19.35],[55.1,19.45]]){const b=new T.Mesh(new T.CylinderGeometry(.3,.28,.8,12),MW);b.position.set(bz[0],.4,bz[1]);b.castShadow=true;W.add(b);for(const y of[.2,.62]){const h=new T.Mesh(new T.TorusGeometry(.3,.012,6,14),MS);h.rotation.x=PI/2;h.position.set(bz[0],y,bz[1]);W.add(h)}col(bz[0]-.32,bz[1]-.32,bz[0]+.32,bz[1]+.32,'f')}
 bx(1,.8,.6,MW,56.3,.4,19.45,'f');noteInt(56.3,.82,19.45,'Wine tag','Vintage 1881.\nLaid down for Eleanor Voss, to be opened on her wedding night.\n\nThe cork was never pulled.');
-cabinet({x:57.55,z:19.2,w:1.2,d:.6,h:2.1,face:'w',kind:'wood',hide:1,label:'Hide in the wine cabinet',ov:'crack'});lamp(54,2.4,16,0xffb878,.8,1,9);web(50.3,2.6,12.3,0);web(57.7,2.6,19.7,PI)}
+lamp(54,2.4,16,0xffb878,.8,1,9);web(50.3,2.6,12.3,0);web(57.7,2.6,19.7,PI)}
 /* records room */
 {bx(6.4,2.4,.5,MB,66,1.2,-1.55,'f');bx(5.2,2.4,.5,MB,65.5,1.2,3.55,'f');bx(2.2,.9,.9,MW,66.2,.45,2.2,'f');
 noteInt(66.2,.92,2.1,'Vault ledger','VOSS ESTATE LEDGER\n\nThe strongroom lock is electric, four digits. Master Voss chose the number himself and wrote it nowhere.\n\nAt his funeral the widow laid the number to rest with him, in the family plot behind the house. She said only the dead should keep it.\n\nIf you must have it, look for the grave that is not like the others. And bring something to dig with.');
@@ -1760,7 +1782,7 @@ addInt(71.6,1.3,2.55,()=>G.vaultOpen?'Digital lock (open)':'Use the digital lock
 {const gs=[];for(let r=0;r<5;r++)for(let c=0;c<8;c++){const b=new T.BoxGeometry(.3,.28,.55);b.translate(78.7,.5+r*.4,-1.45+c*.65);gs.push(b)}
 W.add(new T.Mesh(mergeGeoms(gs),new T.MeshStandardMaterial({color:0x7d8388,metalness:.85,roughness:.4,envMap:envT,envMapIntensity:.6})));col(78.5,-1.85,78.85,3.85,'f');
 bx(1.4,.9,.8,MS,75.5,.45,1,'f');lamp(75.5,2.35,1,0xaac0ff,.9,0,9);
-{const it=addInt(75.3,.93,.85,ITM.gate.lab,()=>{take(it);ITM.gate.get()},mkKey(0x7b8084));it.mesh.rotation.y=.6}
+{const it=addInt(75.3,.93,.85,ITM.gate.lab,()=>{take(it);ITM.gate.get()},mkKey(0x7b8084,'gate'));it.mesh.rotation.y=.6}
 ammoInt(75.9,.93,1.25,5);noteInt(75.5,.92,1.45,'Vault inscription','THE VOSS STRONGROOM\n\nEverything the family could not bear to keep in the house was kept here.\n\nThe gate key hangs where it always hung. Take it and go. Whatever follows you out will not stop at the gate.')}
 }
 /* ================= STATIC MERGE (huge draw-call saving) ================= */
@@ -1906,7 +1928,7 @@ const blk=(i,j)=>{const ax=N[i][0],az=N[i][1],ex=N[j][0]-ax,ez=N[j][1]-az,l2=ex*
 const seen=new Set([from]),q=[from];while(q.length){const u=q.pop();for(const v of adj[u].concat(adjT[u])){if(seen.has(v)||blk(u,v))continue;seen.add(v);q.push(v)}}
 _gr={t:now,f:from,k:key,s:new Set([...seen].map(i=>N[i]))};return _gr.s}
 /* ghost only appears on the main level, only in areas she can actually walk to (no locked rooms, never the basement) */
-function spawnFar(){const from=P.lvl===0?nn(P.x,P.z,0):2,RS=gReach(from),ok=n=>nl(n)===0&&RS.has(n);let c=N.filter(n=>ok(n)&&H(n[0]-P.x,n[1]-P.z)>14&&!los(n[0],n[1],P.x,P.z,true));if(!c.length)c=N.filter(n=>ok(n)&&H(n[0]-P.x,n[1]-P.z)>8);if(!c.length)c=N.filter(ok);if(!c.length)c=N.filter(n=>nl(n)===0);const n=c[Math.floor(R()*c.length)];{const f=ngFree(n[0],n[1])||n;gh.x=f[0];gh.z=f[1]}gh.lvl=0;gh.vis=P.lvl===0;gh.rel=8;gh.path=[];gh.gp=null;gh.tg=null;gh.pause=2}
+function spawnFar(){const from=P.lvl===0?nn(P.x,P.z,0):2,RS=gReach(from),ok=n=>nl(n)===0&&RS.has(n);let c=N.filter(n=>ok(n)&&H(n[0]-P.x,n[1]-P.z)>14&&!los(n[0],n[1],P.x,P.z,true));if(!c.length)c=N.filter(n=>ok(n)&&H(n[0]-P.x,n[1]-P.z)>8);if(!c.length)c=N.filter(ok);if(!c.length)c=N.filter(n=>nl(n)===0);const n=c[Math.floor(R()*c.length)];{const f=ngFree(n[0],n[1])||n;gh.x=f[0];gh.z=f[1]}gh.lvl=0;gh.vis=P.lvl===0;gh.rel=8;gh.path=[];gh.gp=null;gh.tg=null;gh.chkS=null;gh.pause=2}
 function appear(x,z,dur,after){gh.x=x;gh.z=z;gh.st='stare';gh.t=dur;gh.after=after;gh.lvl=P.lvl;gh.vis=true;gh.face=Math.atan2(P.x-x,P.z-z);A.whisper();A.heart();shake=Math.max(shake,.15)}
 function scare(k){if(gh.st==='dormant'||gh.st==='gone'||gh.st==='chase'||gh.st==='kill'||scBusy()||ONCE.has('s_'+k))return;ONCE.add('s_'+k);let n;
 if(k==='corridor'){n=pickNode(9,22,true);if(n)appear(n[0],n[1],2.8,'vanish')}
@@ -1950,28 +1972,35 @@ if(g.pk!==b||!g.path.length){g.pk=b;g.path=bfs(a,b).slice(1).map(i=>N[i])}while(
 if(H(p[0]-g.x,p[1]-g.z)<.6)g.path.shift();else step_(p[0],p[1],sp,dt);return false}
 function hurt(dmg){if(P.dead)return;P.hp-=dmg;A.thud();shake=.5;setDmg(1);const fx=Math.sin(gh.face),fz=Math.cos(gh.face);mv(P,fx*.8,fz*.8,.32);if(P.hp<=0)die()}
 let _dread=0;
-function ghostAI(dt){const g=gh;if(g.st==='dormant'||g.st==='kill'||g.st==='lp')return;
+/* SUSPICION: every time the player hides in the same spot its 'sus' rises (fades slowly). From 2 she suspects it, from 3 she patrols it. */
+function susSpot(maxD,cx,cz,thr){if(P.lvl!==0)return null;const RS=gReach(nn(gh.x,gh.z,gh.lvl));let b=null,bs=0;for(const h of hides){if(h.x>30||(h.sus||0)<thr||H(h.fx-cx,h.fz-cz)>maxD)continue;if(!RS.has(N[nn(h.fx,h.fz,0)]))continue;if(h.sus>bs){bs=h.sus;b=h}}return b}
+function susGo(sp){gh.chkS=sp;gh.tg=[sp.fx,sp.fz];A.whisper();if(!sp.warn&&sp.sus>=3){sp.warn=1;msg('She remembers where you keep hiding.',2600)}}
+function arriveSus(){const g=gh,sp=g.chkS;g.chkS=null;if(!sp)return;if(P.hd&&P.hid===sp&&P.hs==='on'&&g.cool<=0){g.st='check';g.t=3.5+R()*3+Math.min(4,sp.sus)*.8;g.cht=0;g.tg=null}else{sp.sus=Math.max(0,sp.sus-1.5);sp.warn=0}}
+function ghostAI(dt){const g=gh;if(g.st==='dormant'||g.st==='kill'||g.st==='lp')return;for(const h of hides)if(h.sus>0)h.sus=Math.max(0,h.sus-dt/80);
 if(g.vis&&g.lvl===P.lvl&&g.st!=='gone'&&H(P.x-g.x,P.z-g.z)<9){_dread-=dt;if(_dread<=0){_dread=H(P.x-g.x,P.z-g.z)<4?.9:2.2;A.heart();if(R()<.5)A.whisper();shake=Math.max(shake,.06+(9-H(P.x-g.x,P.z-g.z))*.012)}}
-if(g.st==='gone'){g.t-=dt;if(g.t<=0){g.hp=70;g.st='wander';g.aggr+=.25;spawnFar()}return}
+if(g.st==='gone'){g.t-=dt;if(g.t<=0){g.hp=70;g.st='wander';if(g.gk!=='hide')g.aggr+=.25;g.gk=null;spawnFar()}return}
 g.mvg=false;for(const d of doors)if(!d.locked&&!d.open&&H(g.x-d.x,g.z-d.z)<1.9)d.sw(true);
 if(g.lvl!==P.lvl){g.vis=false;g.rel-=dt;if(g.rel<=0)spawnFar();return}
 const d=H(P.x-g.x,P.z-g.z),ls=los(g.x,g.z,P.x,P.z,true),ag=aggrNow();g.d=d;g.ls=ls;
 const sight=(9+(fl.on?6:0))*(P.cr?.6:1)*(P.spr?1.35:1)*Math.min(1.5,ag);
 if(g.st!=='stagger'&&g.st!=='stare'&&g.st!=='rush'&&g.st!=='check'&&!P.hd){if((ls&&d<sight)||d<2.2){if(g.st!=='chase'){g.st='chase';g.lose=0;g.l3=0;A.talk(P.cr?2:1,true);A.scream(.5);shake=Math.max(shake,.25)}g.seen=[P.x,P.z]}
 else if(P.noise&&d<P.noise*ag&&g.st!=='chase'){g.st='investigate';g.seen=[P.x,P.z]}}
-g.cool=Math.max(0,(g.cool||0)-dt);if(P.hd&&P.hid&&g.cool<=0&&(g.st==='chase'||g.st==='investigate'||g.st==='search')&&H(g.x-P.hid.x,g.z-P.hid.z)<3.4){g.st='check';g.t=3.5+R()*3;g.cht=0;g.tg=null}
+g.cool=Math.max(0,(g.cool||0)-dt);if(P.hd&&P.hid&&g.cool<=0&&(g.st==='chase'||g.st==='investigate'||g.st==='search')&&H(g.x-P.hid.x,g.z-P.hid.z)<3.4+Math.min(4,P.hid.sus||0)*3){g.st='check';g.t=3.5+R()*3+Math.min(4,P.hid.sus||0)*.8;g.cht=0;g.tg=null;g.chkS=null}
 switch(g.st){
-case 'wander':if(g.pause>0){g.pause-=dt;break}if(!g.tg){const RS=gReach(nn(g.x,g.z,g.lvl)),c=N.filter(n=>nl(n)===g.lvl&&RS.has(n));g.tg=R()<.15*ag?N[nn(P.x,P.z,g.lvl)]:c[Math.floor(R()*c.length)];break}if(follow(g.tg[0],g.tg[1],.8,dt)){g.tg=null;g.pause=1+R()*3}break;
+case 'wander':if(g.pause>0){g.pause-=dt;break}if(!g.tg&&g.cool<=0&&R()<.3){const sp=susSpot(1e9,g.x,g.z,3);if(sp)susGo(sp)}if(!g.tg){const RS=gReach(nn(g.x,g.z,g.lvl)),all=N.filter(n=>nl(n)===g.lvl&&RS.has(n));g.rec=g.rec||[];let c=all.filter(n=>H(n[0]-g.x,n[1]-g.z)>6&&g.rec.indexOf(n)<0);if(!c.length){g.rec=[];c=all.filter(n=>H(n[0]-g.x,n[1]-g.z)>6)}if(!c.length)c=all;g.tg=R()<.15*ag?N[nn(P.x,P.z,g.lvl)]:c[Math.floor(R()*c.length)];g.rec.push(g.tg);if(g.rec.length>6)g.rec.shift();break}if(follow(g.tg[0],g.tg[1],g.chkS?1.0:.8,dt)){g.tg=null;g.pause=1+R()*3;arriveSus()}break;
 case 'investigate':if(follow(g.seen[0],g.seen[1],1.15*Math.min(1.3,ag),dt)){g.st='search';g.t=10;g.tg=null}break;
-case 'search':g.t-=dt;if(!g.tg||follow(g.tg[0],g.tg[1],1.0,dt)){const RS=gReach(nn(g.x,g.z,g.lvl)),c=N.filter(n=>nl(n)===g.lvl&&RS.has(n)&&H(n[0]-g.seen[0],n[1]-g.seen[1])<12);g.tg=c[Math.floor(R()*c.length)]||N[nn(g.x,g.z,g.lvl)]}if(g.t<=0){g.st='wander';g.tg=null}break;
+case 'search':g.t-=dt;if(!g.tg||follow(g.tg[0],g.tg[1],1.0,dt)){if(g.tg&&g.chkS){arriveSus();if(g.st==='check')break}const RS=gReach(nn(g.x,g.z,g.lvl)),c=N.filter(n=>nl(n)===g.lvl&&RS.has(n)&&H(n[0]-g.seen[0],n[1]-g.seen[1])<12),ss=g.cool<=0?susSpot(18,g.seen[0],g.seen[1],2):null;if(ss){susGo(ss);g.t=Math.max(g.t,7)}else g.tg=c[Math.floor(R()*c.length)]||N[nn(g.x,g.z,g.lvl)]}if(g.t<=0){if(P.hd){g.st='leave';g.t=40;g.lt=null}else{g.st='wander';g.tg=null}}break;
 case 'chase':{if(ls&&!P.hd){g.seen=[P.x,P.z];g.lose=0}else g.lose+=dt*(P.hd?2:1);if(ls&&!P.hd)g.l3=0;else if(g.lose>1.2&&!g.l3){g.l3=1;A.talk(3)}const sp=Math.min(2.55,1.85+ag*.18);
 if(d<1.35&&!P.hd){g.face=la(g.face,Math.atan2(P.x-g.x,P.z-g.z),.3);g.atk+=dt;if(g.atk>.5){hurt(26+ag*4);g.atk=-1}}else{if(g.atk>0)g.atk=Math.max(0,g.atk-dt);follow(g.seen[0],g.seen[1],sp,dt)}
 if(g.lose>5){g.st='search';g.t=14;g.tg=null}break}
 case 'check':{const hs=P.hid;if(!hs||!P.hd){g.st=(ls&&d<sight)?'chase':'search';g.t=8;g.tg=null;g.seen=[P.x,P.z];break}
 if(H(hs.fx-g.x,hs.fz-g.z)>.45){follow(hs.fx,hs.fz,1.1,dt);break}
 g.mvg=false;g.face=la(g.face,Math.atan2(hs.x-g.x,hs.z-g.z),Math.min(1,dt*6));g.t-=dt;g.cht+=dt;shake=Math.max(shake,.04);
-if(g.cht>=1){g.cht=0;A.breath();const pf=(P.hold?.05:.2)*Math.min(1.6,ag)*(fl.on?2:1)*(P.br<=0?2:1);if(R()<pf){foundHide();break}}
-if(g.t<=0){g.st='search';g.t=12;g.tg=null;g.cool=14;g.seen=[hs.x+(R()-.5)*10,hs.z+(R()-.5)*10]}break}
+if(g.cht>=1){g.cht=0;A.breath();const pf=Math.min(.6,(P.hold?.05:.2)*Math.min(1.6,ag)*(fl.on?2:1)*(P.br<=0?2:1)*(1+.6*Math.max(0,(hs.sus||1)-1)));if(R()<pf){foundHide();break}}
+if(g.t<=0){g.cool=14;g.st='leave';g.t=40;g.tg=null;g.lt=null}break}
+case 'leave':{g.t-=dt;if(!g.lt){const RS=gReach(nn(g.x,g.z,g.lvl)),c=N.filter(n=>nl(n)===g.lvl&&RS.has(n)&&H(n[0]-g.x,n[1]-g.z)>9&&!los(n[0],n[1],P.x,P.z,true));g.lt=c.length?c[Math.floor(R()*c.length)]:null;if(!g.lt){g.t=0}}
+if(g.lt&&follow(g.lt[0],g.lt[1],1.0,dt)){if(ls&&d<22&&g.t>6)g.lt=null;else g.t=0}
+if(g.t<=0){if(!ls||d>16){g.st='gone';g.vis=false;g.gk='hide';g.t=25+R()*50;g.tg=null;g.path=[];g.gp=null}else{g.st='wander';g.tg=null;g.pause=2}}break}
 case 'rush':g.t-=dt;step_(P.x,P.z,4.2,dt);if(d<1.5||g.t<=0){g.st='wander';g.tg=null;g.pause=2;flash2D();blackout(.35);spawnFar()}break;
 case 'stagger':g.t-=dt;if(g.t<=0){g.st='chase';g.seen=[P.x,P.z];g.lose=0}break;
 case 'stare':g.face=la(g.face,Math.atan2(P.x-g.x,P.z-g.z),.2);g.t-=dt;if(g.t<=0){if(g.after==='chase'){g.st='chase';g.seen=[P.x,P.z]}else{blackout(.4);g.st='wander';g.tg=null;spawnFar()}}break}
@@ -2822,4 +2851,5 @@ gh.st='stare';gh.lvl=0;gh.x=0;gh.z=-5.5;gh.face=0;gh.d=20;gh.vis=Math.sin(t/1900
 if(POST.on)postRender(performance.now());else ren.render(scene,cam)}
 build();gh.st='dormant';{const gv=gun.visible,ggv=gmesh.g.visible;gun.visible=true;gmesh.g.visible=true;const bn=burnGet(),x2=getX2(),ar=getArm();bn.g.visible=x2.g.visible=ar.visible=true;srBuild().g.visible=true;try{ren.compile(scene,cam)}catch(e){}bn.g.visible=x2.g.visible=ar.visible=false;SRX.g.visible=false;gun.visible=gv;gmesh.g.visible=ggv}requestAnimationFrame(loop);
 })();
+
 </script></body></html>
