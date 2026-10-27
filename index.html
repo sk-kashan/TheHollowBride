@@ -624,12 +624,24 @@ const H_={};let dmgO=0;const setDmg=v=>{dmgO=v;$('dmg').style.opacity=v};
 const fl={on:false,own:false,f:0};
 const spot=new T.SpotLight(0xfff0d0,0,24,.46,.55,1.5);spot.castShadow=QUAL>0;spot.shadow.mapSize.set(512,512);spot.shadow.camera.near=.2;spot.shadow.camera.far=18;spot.shadow.autoUpdate=false;spot.shadow.needsUpdate=true;spot.shadow.bias=-.0007;spot.shadow.normalBias=.03;cam.add(spot);cam.add(spot.target);spot.target.position.set(0,0,-5);
 /* ===== Pistol + tactical-glove hands model. X = {envT, TX:{slide,slideTxt,grip,leather,cloth,wall}} ===== */
-function makeGun(T,X){
+function makeGun(T,X,kind){kind=kind||'glock';
 const PI=Math.PI,TX=X.TX;
 const eM=(c,r,m,k,map,bump,bs)=>new T.MeshStandardMaterial({color:c,roughness:r,metalness:m,envMap:X.envT,envMapIntensity:k,map:map||null,bumpMap:bump||null,bumpScale:bs||1});
-const steel=eM(0xd2d6dc,.34,.9,.9,TX.slide,TX.slide,.6),blk=eM(0x0b0c0e,.5,.6,.5),poly=new T.MeshStandardMaterial({color:0xc4c8cf,roughness:.82,metalness:.05,map:TX.grip,bumpMap:TX.grip,bumpScale:1.6}),
+const GT=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.fillStyle='#2b2d31';g.fillRect(0,0,128,128);for(let y=0;y<128;y+=8){g.fillStyle='#0f1012';g.fillRect(0,y,128,3);g.fillStyle='#4b4e54';g.fillRect(0,y+3,128,1)}const t=new T.CanvasTexture(c);t.wrapS=t.wrapT=T.RepeatWrapping;t.repeat.set(19,19);return t})();
+const serrDecal=(n,w,h,x,y,z,s)=>{const c=document.createElement('canvas');c.width=n*16;c.height=64;const g=c.getContext('2d');for(let i=0;i<n;i++){g.fillStyle='rgba(0,0,0,.9)';g.fillRect(i*16+5,0,5,64);g.fillStyle='rgba(255,255,255,.4)';g.fillRect(i*16+10,0,2,64)}const t=new T.CanvasTexture(c);const m=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));m.position.set(x,y,z);m.rotation.y=s*PI/2;return m};
+const mkT=(w,h,fn,rep)=>{const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');fn(g,w,h);const t=new T.CanvasTexture(c);t.wrapS=t.wrapT=T.RepeatWrapping;t.repeat.set(rep,rep);t.anisotropy=4;return t};
+/* fine surface grain (nitride / polymer / steel) - uniform micro noise, no streaks */
+const GRAIN=mkT(128,128,(g,w,h)=>{const id=g.createImageData(w,h);for(let i=0;i<w*h;i++){const v=116+Math.random()*30|0;id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v;id.data[i*4+3]=255}g.putImageData(id,0,0)},120);
+/* glock grip: evenly spaced raised stipple dots in a hex pattern */
+const STIP=mkT(128,128,(g,w,h)=>{g.fillStyle='#1a1b1e';g.fillRect(0,0,w,h);for(let r=0;r<4;r++)for(let c=0;c<4;c++){const y=r*32+16,x=c*32+(r%2?32:16);for(const xx of[x,x-w]){const gr=g.createRadialGradient(xx,y,1,xx,y,13);gr.addColorStop(0,'#7a7d84');gr.addColorStop(1,'#1a1b1e');g.fillStyle=gr;g.beginPath();g.arc(xx,y,13,0,7);g.fill()}}},156);
+/* desert eagle grip: diamond checkering */
+const CHK=mkT(128,128,(g,w,h)=>{g.fillStyle='#8d9096';g.fillRect(0,0,w,h);g.lineWidth=5;g.strokeStyle='#17181a';for(let k=-w;k<=2*w;k+=32){g.beginPath();g.moveTo(k,0);g.lineTo(k+h,h);g.stroke();g.beginPath();g.moveTo(k,h);g.lineTo(k+h,0);g.stroke()}},104);
+const CHK2=CHK.clone();CHK2.repeat.set(6,8);CHK2.needsUpdate=true;
+const txtDecal=(txt,w,h,x,y,z,s,fs,col)=>{const c=document.createElement('canvas');c.width=512;c.height=Math.round(512*h/w);const g=c.getContext('2d');g.font='bold '+(fs||44)+'px Arial, Helvetica, sans-serif';g.textBaseline='middle';g.fillStyle=col||'rgba(215,220,226,.8)';g.fillText(txt,10,c.height/2);const t=new T.CanvasTexture(c);const m=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));m.position.set(x,y,z);m.rotation.y=s*PI/2;return m};
+const pinDisc=(x,y,z)=>{const m=new T.Mesh(new T.CylinderGeometry(.0021,.0021,.001,12),steel);m.rotation.z=PI/2;m.position.set(x,y,z);return m};
+const slideM=eM(0x1f2124,.45,.65,1.2,null,GRAIN,.8),steel=eM(0xb4bac2,.36,.9,.9,null,GRAIN,.4),blk=eM(0x0b0c0e,.5,.6,.5),poly=new T.MeshStandardMaterial({color:0x2e3034,roughness:.7,metalness:.1,bumpMap:GRAIN,bumpScale:.9}),gripM=new T.MeshStandardMaterial({color:0xffffff,roughness:.85,metalness:.05,map:STIP,bumpMap:STIP,bumpScale:2.2}),gripD=new T.MeshStandardMaterial({color:0xffffff,roughness:.8,metalness:.05,map:CHK,bumpMap:CHK,bumpScale:1.8}),gripP=new T.MeshStandardMaterial({color:0xffffff,roughness:.8,metalness:.05,map:CHK2,bumpMap:CHK2,bumpScale:1.8}),
 brass=eM(0xb59a55,.4,.85,.8),dotM=new T.MeshBasicMaterial({color:0xe8efe0});
-function buildPistol(){
+function buildPistol(kind){if(kind==='deagle'){try{return buildDeagle()}catch(e){console.warn('deagle fallback',e)}}
 const pistol=new T.Group();
 /* side-profile extrusion: shape x = forward length (rear->muzzle), y = height; extruded sideways and turned so the muzzle points to -z */
 const ex=(pts,w,mat,bev,holes)=>{const s=new T.Shape();pts.forEach((p,i)=>i?s.lineTo(p[0],p[1]):s.moveTo(p[0],p[1]));s.closePath();
@@ -637,37 +649,108 @@ if(holes)holes.forEach(h=>{const p=new T.Path();h.forEach((q,i)=>i?p.lineTo(q[0]
 const g=new T.ExtrudeGeometry(s,{depth:w,bevelEnabled:true,bevelSize:bev,bevelThickness:bev,bevelSegments:3,curveSegments:3});g.translate(0,0,-w/2);g.rotateY(PI/2);const m=new T.Mesh(g,mat);m.castShadow=false;pistol.add(m);return m};
 const bxm=(w,h,l,mat,x,y,xl)=>{const m=new T.Mesh(new T.BoxGeometry(w,h,l),mat);m.position.set(x,y,-xl);pistol.add(m);return m};
 /* slide: rear sight, front sight, chamfered front */
-const sg=new T.Group();pistol.add(sg);const slide=ex([[0,0],[0,.021],[.005,.0305],[.011,.0315],[.1705,.0315],[.178,.0295],[.1865,.0255],[.1865,0]],.0255,steel,.0025);sg.add(slide);
+const sg=new T.Group();pistol.add(sg);let slide;
+/* Glock-style slide: flat sides, chamfered top edges, tapered + sloped muzzle end, crisp bevelled edges */
+try{const W=.0305,L=.1915,Hs=.034,ch=.0052,s=new T.Shape();s.moveTo(-W/2,0);s.lineTo(W/2,0);s.lineTo(W/2,Hs-.0055);s.lineTo(W/2-ch,Hs);s.lineTo(-W/2+ch,Hs);s.lineTo(-W/2,Hs-.0055);s.closePath();
+ const g=new T.ExtrudeGeometry(s,{depth:L,bevelEnabled:true,bevelSize:.0005,bevelThickness:.0005,bevelSegments:1,curveSegments:2});g.rotateY(PI);g.translate(0,0,.0025);
+ const pa=g.attributes.position;for(let i=0;i<pa.count;i++){const t=(.0025-pa.getZ(i))/L,y=pa.getY(i);let x=pa.getX(i);
+  if(t>.86){const f=(t-.86)/.14,e=f*f;x*=1-.2*e;if(y>.02)pa.setY(i,y-.0045*e)}if(t<.025)x*=.94+.06*(t/.025);pa.setX(i,x)}
+ g.computeVertexNormals();slide=new T.Mesh(g,slideM)}
+catch(e){console.warn('slide fallback',e);slide=ex([[0,0],[0,.021],[.005,.0305],[.011,.0315],[.1705,.0315],[.178,.0295],[.1865,.0255],[.1865,0]],.0255,slideM,.0025)}
+sg.add(slide);
 /* frame rails + dust cover + trigger guard (real hole) */
 ex([[-.004,-.006],[0,0],[.1865,0],[.1865,-.016],[.126,-.016],[.126,-.0545],[.1248,-.0592],[.1215,-.0618],[.118,-.0625],[.056,-.0625],[-.0153,-.0625]],.0215,poly,.0015,[[[.0668,-.016],[.1205,-.016],[.1205,-.0545],[.1165,-.0585],[.058,-.0585]]]);
+for(const z of[.148,.168])bxm(.016,.001,.0045,blk,0,-.0163,z);
 /* wider stippled grip with finger grooves */
-ex([[-.005,-.0135],[.0668,-.0135],[.0579,-.0585],[.0570,-.064],[.0546,-.0665],[.0562,-.07],[.0518,-.0735],[.0534,-.0775],[.0493,-.081],[.0508,-.085],[.0468,-.088],[.0475,-.093],[.0455,-.1175],[-.0265,-.1175],[-.0225,-.1],[-.017,-.07],[-.01,-.04]],.03,poly,.002);
+ex([[-.005,-.0135],[.0668,-.0135],[.0579,-.0585],[.0570,-.064],[.0546,-.0665],[.0562,-.07],[.0518,-.0735],[.0534,-.0775],[.0493,-.081],[.0508,-.085],[.0468,-.088],[.0475,-.093],[.0455,-.1175],[-.0265,-.1175],[-.0225,-.1],[-.017,-.07],[-.01,-.04]],.03,gripM,.002);
 /* trigger, slide stop, mag catch */
 const trg=ex([[.089,-.0165],[.0955,-.0165],[.1015,-.0495],[.0955,-.0525],[.0875,-.0395],[.0865,-.0245]],.0065,blk,.0008);
 const ss=ex([[.0455,-.0005],[.0825,-.0005],[.0835,-.0075],[.0555,-.0075],[.0455,-.0035]],.0035,steel,.0006);ss.position.x=-.0142;
-const tdl=ex([[.0905,-.0035],[.0985,-.0015],[.1045,-.0035],[.1045,-.0095],[.0905,-.0095]],.003,blk,.0006);tdl.position.x=-.0132;
+const tdl=ex([[.0905,-.0035],[.0985,-.0015],[.1045,-.0035],[.1045,-.0095],[.0905,-.0095]],.003,blk,.0006);tdl.position.x=-.0132;const tdr=tdl.clone();tdr.position.x=.0132;pistol.add(tdr);
+{const tb=new T.Mesh(new T.BoxGeometry(.0034,.017,.0018),steel);tb.position.set(0,-.032,-.099);tb.rotation.x=.18;trg.add(tb)}
 const mc=new T.Mesh(new T.CylinderGeometry(.0042,.0042,.004,10),steel);mc.rotation.z=PI/2;mc.position.set(-.0182,-.033,-.0625);pistol.add(mc);
+for(const s of[-1,1])for(const z of[-.062,-.1,-.145])pistol.add(pinDisc(s*.01235,-.0115,z));
+pistol.add(txtDecal('SN 0471-93   9x19',.05,.0075,-.01255,-.0055,-.152,-1,40));
 /* serrations (rear + front) */
 const sBox=(w,h,l,mat,x,y,z)=>{const m=new T.Mesh(new T.BoxGeometry(w,h,l),mat);m.position.set(x,y,z);sg.add(m);return m},sDot=(r,x,y,z)=>{const d=new T.Mesh(new T.SphereGeometry(r,10,8),dotM);d.position.set(x,y,z);d.scale.z=.35;sg.add(d)};
-for(let i=0;i<7;i++)sBox(.0309,.019,.0013,blk,0,.0145,-(.003+i*.003));
-for(let i=0;i<5;i++)sBox(.0309,.019,.0013,blk,0,.0145,-(.128+i*.0032));
+for(const s of[-1,1]){sg.add(serrDecal(7,.0224,.017,s*.0156,.0155,-.018,s));sg.add(serrDecal(5,.016,.017,s*.0156,.0155,-.1366,s))}sg.add(txtDecal('9x19',.026,.0075,.0156,.019,-.168,1,48));
+
 /* ejection port + engraved text decals */
-const port=new T.Mesh(new T.PlaneGeometry(.04,.012),new T.MeshBasicMaterial({color:0x050505}));port.position.set(.0153,.0235,-.08);port.rotation.y=PI/2;sg.add(port);
+const port=new T.Mesh(new T.PlaneGeometry(.04,.011),new T.MeshBasicMaterial({color:0x050505}));port.position.set(.0153,.0205,-.08);port.rotation.y=PI/2;sg.add(port);
 const tp=new T.Mesh(new T.PlaneGeometry(.118,.0148),new T.MeshBasicMaterial({map:TX.slideTxt,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));tp.position.set(-.0154,.0165,-.1);tp.rotation.y=-PI/2;sg.add(tp);
 /* sight dots, barrel */
 sBox(.0036,.006,.009,blk,-.0037,.0345,-.016);sBox(.0036,.006,.009,blk,.0037,.0345,-.016);sDot(.0012,-.0037,.0345,-.0113);sDot(.0012,.0037,.0345,-.0113);
 sBox(.0034,.0045,.006,blk,0,.03375,-.1665);sDot(.0012,0,.0338,-.1634);
 sBox(.0195,.0125,.0016,poly,0,.0135,.0008);{const fp=new T.Mesh(new T.CircleGeometry(.0012,10),new T.MeshBasicMaterial({color:0x000000}));fp.position.set(0,.0135,.0017);sg.add(fp)}
+{const hood=new T.Mesh(new T.BoxGeometry(.0008,.0072,.026),steel);hood.position.set(.01535,.0195,-.083);sg.add(hood);const ext=new T.Mesh(new T.BoxGeometry(.0014,.0062,.011),steel);ext.position.set(.01545,.0205,-.0585);sg.add(ext)}
 const opn=new T.Mesh(new T.CircleGeometry(.0074,16),new T.MeshBasicMaterial({color:0x020202}));opn.position.set(0,.0215,-.1893);opn.rotation.y=PI;pistol.add(opn);
-const brl=new T.Mesh(new T.CylinderGeometry(.0056,.0056,.008,14),steel);brl.rotation.x=PI/2;brl.position.set(0,.0215,-.1885);pistol.add(brl);
-const bore=new T.Mesh(new T.CircleGeometry(.0036,10),new T.MeshBasicMaterial({color:0x000000}));bore.position.set(0,.0215,-.1927);bore.rotation.y=PI;pistol.add(bore);
+const brl=new T.Mesh(new T.CylinderGeometry(.0056,.0056,.008,24),steel);brl.rotation.x=PI/2;brl.position.set(0,.0215,-.1885);pistol.add(brl);const crown=new T.Mesh(new T.CylinderGeometry(.0066,.006,.0022,24),steel);crown.rotation.x=PI/2;crown.position.set(0,.0215,-.1919);pistol.add(crown);
+const bore=new T.Mesh(new T.CircleGeometry(.0036,10),new T.MeshBasicMaterial({color:0x000000}));bore.position.set(0,.0215,-.1932);bore.rotation.y=PI;pistol.add(bore);
 /* magazine (animated on reload) + baseplate */
 const mag=new T.Group();mag.position.set(0,-.0135,-.0309);mag.rotation.x=-.203;
-const mb1=new T.Mesh(new T.BoxGeometry(.0215,.1,.0345),steel);mb1.position.y=-.05;const mpl=new T.Mesh(new T.BoxGeometry(.0285,.01,.05),poly);mpl.position.set(0,-.101,.004);mag.add(mb1,mpl);pistol.add(mag);
+const rp=(w,d,h,r,mat)=>{const s=new T.Shape(),a=w/2,b=d/2;s.moveTo(-a+r,-b);s.lineTo(a-r,-b);s.quadraticCurveTo(a,-b,a,-b+r);s.lineTo(a,b-r);s.quadraticCurveTo(a,b,a-r,b);s.lineTo(-a+r,b);s.quadraticCurveTo(-a,b,-a,b-r);s.lineTo(-a,-b+r);s.quadraticCurveTo(-a,-b,-a+r,-b);
+ const g=new T.ExtrudeGeometry(s,{depth:h,bevelEnabled:false,curveSegments:5});g.rotateX(-PI/2);return new T.Mesh(g,mat)};
+try{const magM=new T.MeshStandardMaterial({color:0x2a2c30,roughness:.72,metalness:.12});const mb=rp(.0215,.0345,.1,.005,magM);mb.position.y=-.1;mag.add(mb);const pl=rp(.0285,.05,.009,.006,poly);pl.position.set(0,-.106,.004);mag.add(pl);
+ const holeM=new T.MeshBasicMaterial({color:0x70767d});for(const sx of[-1,1])for(let i=0;i<4;i++){const h=new T.Mesh(new T.CircleGeometry(.0017,12),holeM);h.position.set(sx*.01085,-.03-i*.015,0);h.rotation.y=sx*PI/2;mag.add(h)}}
+catch(e){console.warn('mag fallback',e);const mb1=new T.Mesh(new T.BoxGeometry(.0215,.1,.0345),steel);mb1.position.y=-.05;const mpl=new T.Mesh(new T.BoxGeometry(.0285,.01,.05),poly);mpl.position.set(0,-.101,.004);mag.add(mb1,mpl)}
+pistol.add(mag);
 const mf=new T.Group();[0,PI/2].forEach(ry=>{const p=new T.Mesh(new T.PlaneGeometry(.17,.17),new T.MeshBasicMaterial({map:TX.flash,transparent:true,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide,fog:false}));p.rotation.y=ry;mf.add(p)});mf.position.set(0,.0215,-.2);mf.visible=false;pistol.add(mf);
 return{pistol,slide:sg,mag,mf,trg}}
+function buildDeagle(){
+const pistol=new T.Group();
+const ex=(pts,w,mat,bev,holes)=>{const s=new T.Shape();pts.forEach((p,i)=>i?s.lineTo(p[0],p[1]):s.moveTo(p[0],p[1]));s.closePath();
+if(holes)holes.forEach(h=>{const p=new T.Path();h.forEach((q,i)=>i?p.lineTo(q[0],q[1]):p.moveTo(q[0],q[1]));p.closePath();s.holes.push(p)});
+const g=new T.ExtrudeGeometry(s,{depth:w,bevelEnabled:true,bevelSize:bev,bevelThickness:bev,bevelSegments:3,curveSegments:3});g.translate(0,0,-w/2);g.rotateY(PI/2);const m=new T.Mesh(g,mat);pistol.add(m);return m};
+/* prism: cross-section polygon (x lateral, y height) extruded along the barrel; rear at z=+.0025, muzzle toward -z */
+const prism=(pts,L,mat,bev,par)=>{const s=new T.Shape();pts.forEach((p,i)=>i?s.lineTo(p[0],p[1]):s.moveTo(p[0],p[1]));s.closePath();
+const g=new T.ExtrudeGeometry(s,{depth:L,bevelEnabled:bev>0,bevelSize:bev,bevelThickness:bev,bevelSegments:1,curveSegments:2});g.rotateY(PI);g.translate(0,0,.0025);const m=new T.Mesh(g,mat);(par||pistol).add(m);return m};
+const bx=(w,h,l,mat,x,y,z,par)=>{const m=new T.Mesh(new T.BoxGeometry(w,h,l),mat);m.position.set(x,y,z);(par||pistol).add(m);return m};
+const silver=eM(0xcfd4da,.25,.75,1.3,null,GRAIN,.3),frameM=eM(0x1c1d20,.5,.6,.9,null,GRAIN,.6),blackB=new T.MeshBasicMaterial({color:0x040405});
+const sg=new T.Group();pistol.add(sg);
+/* massive slide with chamfered top edges, flat top rib, long rear sight + front sight */
+prism([[-.0165,0],[.0165,0],[.0165,.034],[.0125,.0395],[-.0125,.0395],[-.0165,.034]],.2075,silver,.0006,sg);
+prism([[-.0062,.0395],[.0062,.0395],[.0062,.0432],[-.0062,.0432]],.2,silver,.0004,sg);
+for(let i=0;i<14;i++)bx(.0128,.0009,.0026,blackB,0,.04325,-(.012+i*.0125),sg);
+for(const s of[-1,1]){bx(.003,.0055,.008,blkM(),s*.0042,.0460,-.012,sg);const d=new T.Mesh(new T.SphereGeometry(.0011,8,6),dotM);d.position.set(s*.0042,.0478,-.0075);d.scale.z=.35;sg.add(d)}
+bx(.0028,.0052,.007,blkM(),0,.0458,-.1905,sg);{const d=new T.Mesh(new T.SphereGeometry(.0012,8,6),dotM);d.position.set(0,.0466,-.1868);d.scale.z=.35;sg.add(d)}
+function blkM(){return blk}
+/* rear serrations both sides, big ejection port (right), engraving (left) */
+for(const s of[-1,1])sg.add(serrDecal(6,.0216,.022,s*.0169,.0175,-.0146,s));
+const port=new T.Mesh(new T.PlaneGeometry(.058,.016),blackB);port.position.set(.01655,.0265,-.075);port.rotation.y=PI/2;sg.add(port);
+bx(.0008,.009,.03,steel,.01665,.0235,-.085,sg);
+const tp=new T.Mesh(new T.PlaneGeometry(.118,.0148),new T.MeshBasicMaterial({map:TX.slideTxt,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));tp.position.set(-.0167,.021,-.125);tp.rotation.y=-PI/2;sg.add(tp);
+bx(.0215,.0145,.0016,frameM,0,.0165,.0008,sg);
+/* barrel shroud: angular wedge that stays put when the slide cycles */
+const sh=prism([[-.0105,.0035],[.0105,.0035],[.015,.012],[.015,.0345],[.0108,.0395],[-.0108,.0395],[-.015,.0345],[-.015,.012]],.075,silver,.0006);sh.position.z=-.2;
+const rib2=prism([[-.0062,.0395],[.0062,.0395],[.0062,.0432],[-.0062,.0432]],.075,silver,.0004);rib2.position.z=-.2;
+const ring=new T.Mesh(new T.RingGeometry(.0058,.0088,24),silver);ring.position.set(0,.0215,-.2737);ring.rotation.y=PI;pistol.add(ring);
+const bore=new T.Mesh(new T.CircleGeometry(.0058,24),blackB);bore.position.set(0,.0215,-.2736);bore.rotation.y=PI;pistol.add(bore);
+/* frame: long dust cover with rail slots, big squared trigger guard */
+ex([[-.004,-.006],[0,0],[.2525,0],[.2525,-.0225],[.1385,-.0225],[.1385,-.0555],[.136,-.0605],[.1315,-.0632],[.1275,-.0638],[.056,-.0638],[-.0153,-.0638]],.0235,frameM,.0015,[[[.0668,-.0225],[.1335,-.0225],[.1335,-.0555],[.1295,-.0595],[.058,-.0595]]]);
+for(const z of[.17,.19,.21])bx(.02,.001,.005,blackB,0,-.0228,-z);
+/* grip: same wrap points as the standard grip so the hands still fit, a little wider */
+ex([[-.005,-.0135],[.0668,-.0135],[.0579,-.0585],[.0570,-.064],[.0546,-.0665],[.0562,-.07],[.0518,-.0735],[.0534,-.0775],[.0493,-.081],[.0508,-.085],[.0468,-.088],[.0475,-.093],[.0455,-.1175],[-.0265,-.1175],[-.0225,-.1],[-.017,-.07],[-.01,-.04]],.034,gripD,.002);
+for(const s of[-1,1]){const pn=new T.Mesh(new T.BoxGeometry(.0016,.082,.058),gripP);pn.position.set(s*.02,-.0685,-.0215);pistol.add(pn);
+ for(const yz of[[-.04,-.04],[-.095,-.012]]){const b=new T.Mesh(new T.CylinderGeometry(.0034,.0034,.0016,6),silver);b.rotation.z=PI/2;b.position.set(s*.0215,yz[0],yz[1]);pistol.add(b)}
+ for(const z of[-.07,-.15])pistol.add(pinDisc(s*.0134,-.0105,z))}
+pistol.add(txtDecal('SN 0471-93   .50 AE',.05,.0085,-.0136,-.0105,-.2,-1,40));
+sh.add(txtDecal('.50 AE',.034,.008,.0158,.0215,-.0425,1,48));
+{const rd=new T.Mesh(new T.CircleGeometry(.0018,10),new T.MeshBasicMaterial({color:0xc01818}));rd.position.set(.0217,.0285,-.018);rd.rotation.y=PI/2;pistol.add(rd)}
+const trg=ex([[.089,-.0165],[.0955,-.0165],[.1015,-.0495],[.0955,-.0525],[.0875,-.0395],[.0865,-.0245]],.0065,silver,.0008);
+const mc=new T.Mesh(new T.CylinderGeometry(.0048,.0048,.004,12),silver);mc.rotation.z=PI/2;mc.position.set(-.0195,-.035,-.0625);pistol.add(mc);
+for(const s of[-1,1]){const c=new T.Mesh(new T.CylinderGeometry(.0045,.0045,.006,12),silver);c.rotation.z=PI/2;c.position.set(s*.0186,.0285,-.018);pistol.add(c)}
+/* magazine (same seat + travel as the standard one so the reload animation is unchanged) */
+const mag=new T.Group();mag.position.set(0,-.0135,-.0309);mag.rotation.x=-.203;
+const rp=(w,d,h,r,mat)=>{const s=new T.Shape(),a=w/2,b=d/2;s.moveTo(-a+r,-b);s.lineTo(a-r,-b);s.quadraticCurveTo(a,-b,a,-b+r);s.lineTo(a,b-r);s.quadraticCurveTo(a,b,a-r,b);s.lineTo(-a+r,b);s.quadraticCurveTo(-a,b,-a,b-r);s.lineTo(-a,-b+r);s.quadraticCurveTo(-a,-b,-a+r,-b);
+ const g=new T.ExtrudeGeometry(s,{depth:h,bevelEnabled:false,curveSegments:5});g.rotateX(-PI/2);return new T.Mesh(g,mat)};
+const magM=new T.MeshStandardMaterial({color:0x2a2c30,roughness:.7,metalness:.2});
+const mb=rp(.0225,.0385,.1,.005,magM);mb.position.y=-.1;mag.add(mb);const pl=rp(.0305,.052,.009,.006,frameM);pl.position.set(0,-.106,.004);mag.add(pl);
+pistol.add(mag);
+const mf=new T.Group();[0,PI/2].forEach(ry=>{const p=new T.Mesh(new T.PlaneGeometry(.2,.2),new T.MeshBasicMaterial({map:TX.flash,transparent:true,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide,fog:false}));p.rotation.y=ry;mf.add(p)});mf.position.set(0,.0215,-.285);mf.visible=false;pistol.add(mf);
+return{pistol,slide:sg,mag,mf,trg}}
+
 /* ---------- first-person gun with gloved hands ---------- */
-const gun=new T.Group(),B=buildPistol(),pistol=B.pistol;gun.add(pistol);
+const gun=new T.Group(),B=buildPistol(kind),pistol=B.pistol;if(kind==='deagle')pistol.position.y=-.011;gun.add(pistol);
 const leather=new T.MeshStandardMaterial({color:0x1a1a1d,roughness:.5,metalness:.05,map:TX.leather,bumpMap:TX.leather,bumpScale:1.5,envMap:X.envT,envMapIntensity:.35}),
 padM=new T.MeshStandardMaterial({color:0x0d0d0f,roughness:.9}),strapM=new T.MeshStandardMaterial({color:0x3b3d3a,roughness:.9,map:TX.cloth,bumpMap:TX.cloth}),
 sleeveM=new T.MeshStandardMaterial({color:0x2a3029,roughness:1,map:TX.cloth,bumpMap:TX.cloth,bumpScale:1.2});
@@ -696,13 +779,14 @@ const st=new T.Mesh(new T.CylinderGeometry(r*1.16,r*1.16,.022,16),strapM);st.qua
 const sl=new T.Mesh(new T.CylinderGeometry(r*1.5,r*1.2,l,16),sleeveM);sl.quaternion.setFromUnitVectors(q,dir);sl.position.set(w[0],w[1],w[2]).addScaledVector(dir,.07+l/2);tg.add(sl)};
 tg=hand;arm([.058,-.075,.075],[.25,-.45,.85],.6,.029);tg=lh;arm([-.058,-.09,.062],[-.42,-.42,.8],.6,.029);
 const nmag=B.mag.clone();nmag.visible=false;pistol.add(nmag);
-return{gun,pistol,slide:B.slide,mag:B.mag,nmag,mf:B.mf,trg:B.trg,buildPistol,lh}}
+return{gun,pistol,slide:B.slide,mag:B.mag,nmag,mf:B.mf,trg:B.trg,buildPistol:k=>buildPistol(k||kind),lh,kind}}
 
 let envT=null;try{const pmg=new T.PMREMGenerator(ren),es=new T.Scene();es.background=new T.Color(0x06070a);[[0xffe0b0,3,4,3,2,3,.3,3],[0x8090c0,1.5,-4,2,-3,3,.3,3],[0xffffff,1.2,0,5,0,5,.2,5],[0xffc080,.8,0,-.5,-5,4,1,.2]].forEach(a=>{const m=new T.Mesh(new T.BoxGeometry(a[5],a[6],a[7]),new T.MeshBasicMaterial({color:new T.Color(a[0]).multiplyScalar(a[1])}));m.position.set(a[2],a[3],a[4]);es.add(m)});envT=pmg.fromScene(es,.04).texture}catch(e){envT=null}
-const GM=makeGun(T,{envT,TX}),gun=GM.gun,pistol=GM.pistol,slide=GM.slide,mag=GM.mag,nmag=GM.nmag,mf=GM.mf;
+const GMG=makeGun(T,{envT,TX},'glock'),GMD=makeGun(T,{envT,TX},'deagle');let GM=GMG,gun=GM.gun,pistol=GM.pistol,slide=GM.slide,mag=GM.mag,nmag=GM.nmag,mf=GM.mf,GUNKIND='glock';
+function setGunKind(k){k=k==='deagle'?'deagle':'glock';const n=k==='deagle'?GMD:GMG;GUNKIND=k;if(n===GM)return;const vis=GM.gun.visible;GM.gun.visible=false;GM=n;gun=n.gun;pistol=n.pistol;slide=n.slide;mag=n.mag;nmag=n.nmag;mf=n.mf;gun.visible=vis}
 const mfl=new T.PointLight(0xffaa44,0,9);mfl.position.set(.14,-.12,-.8);cam.add(mfl);
 const gfl=new T.PointLight(0xfff0e0,0,1.7,2);gfl.position.set(.1,.12,.15);cam.add(gfl);
-const GB=[.13,-.165,-.42];gun.scale.setScalar(1.7);gun.position.set(GB[0],GB[1],GB[2]);gun.rotation.y=.05;gun.visible=false;cam.add(gun);
+const GB=[.13,-.165,-.42];for(const g of[GMG.gun,GMD.gun]){g.scale.setScalar(1.7);g.position.set(GB[0],GB[1],GB[2]);g.rotation.y=.05;g.visible=false;cam.add(g)}
 /* ===== first-person hammer with gloved hand, equip logic, night sky (added) ===== */
 function makeHammer(hand){const g=new T.Group(),wood=new T.MeshStandardMaterial({map:TX.cwood,color:0xc59a62,roughness:.78,bumpMap:TX.cwood,bumpScale:.6}),
 steel=new T.MeshStandardMaterial({color:0x9a9fa5,metalness:.92,roughness:.32,envMap:envT,envMapIntensity:.9}),dark=new T.MeshStandardMaterial({color:0x1a1b1d,metalness:.6,roughness:.55}),
@@ -1124,7 +1208,7 @@ const gen=genBuild();col(55.2,10.25,56.8,11.35,'f');decal(TX.oil,56.1,10.9,2,.3)
 const gi=addInt(56,1.1,10.8,'Start the generator',()=>{if(G.power){return}if(!inv.keys.has('fuse')){msg('A fuse is missing from the generator.');return}inv.keys.delete('fuse');G.power=true;A.unlock();A.hum();shake=.2;lamps.forEach(l=>l.base*=1.4);msg('The generator shudders awake. The whole house hums.');obj('The rusty key is somewhere in this cellar.');G.ev.pow=1;setTimeout(()=>G.st==='play'&&scare('corridor'),4000)},gen);gen.position.set(56,0,10.8);GEN={g:gen,led:gen.userData.led,tk:0,run:null};
 cabinet({x:50.4,z:3.3,w:.9,d:.5,h:1.9,face:'e',kind:'steel',rust:1,doors:2,hide:1,label:'Hide in the rusty locker',ov:'vent',cy:1.45});
 cabinet({x:50.4,z:8.1,w:.9,d:.5,h:1.9,face:'e',kind:'steel',rust:1,doors:1,hinge:'r',shelf:1});
-{const it=addInt(50.95,1.25,8.1,()=>inv.keys.has('locker')?'Unlock the gun locker':'Gun locker (locked)',()=>{if(!inv.keys.has('locker')){msg('A padlocked steel locker. It needs the Locker Key.');A.o(200,120,.2,.2,'square');return}if(!keyReady('locker'))return;keyAnim('locker',()=>{inv.keys.delete('locker');take(it);if(GL){GL.sw.forEach(w=>w.tgt=1);GL.item.visible=false}inv.gun=true;inv.mag=6;inv.res=Math.max(inv.res,4);KU.next='gun';A.unlock();msg('A pistol. Six rounds loaded, four spare.');if(!G.power)obj(inv.keys.has('fuse')?'Start the generator in the cellar.':'Find the generator fuse.')},{x:50.95,y:1.25,z:8.1})},null)}
+{const it=addInt(50.95,1.25,8.1,()=>inv.keys.has('locker')?'Unlock the gun locker':'Gun locker (locked)',()=>{if(!inv.keys.has('locker')){msg('A padlocked steel locker. It needs the Locker Key.');A.o(200,120,.2,.2,'square');return}if(!keyReady('locker'))return;keyAnim('locker',()=>{inv.keys.delete('locker');take(it);if(GL){GL.sw.forEach(w=>w.tgt=1);GL.item.visible=false}inv.gun=true;inv.mag=6;inv.res=Math.max(inv.res,4);KU.next='gun';A.unlock();msg(GUNKIND==='deagle'?'A Desert Eagle. Six rounds loaded, four spare.':'A pistol. Six rounds loaded, four spare.');if(!G.power)obj(inv.keys.has('fuse')?'Start the generator in the cellar.':'Find the generator fuse.')},{x:50.95,y:1.25,z:8.1})},null)}
 const bo=new T.Mesh(new T.CylinderGeometry(.8,.8,2.2,14),new T.MeshStandardMaterial({color:0x3a3028,metalness:.6,roughness:.7}));bo.position.set(52,1.1,5);bo.castShadow=true;W.add(bo);col(51.2,4.2,52.8,5.8,'f');
 bench(52.5,11.3);ammoInt(53.5,.95,11.2,5);
 crate(59,15.6);noteInt(59,.82,15.6,'Scrawled note','If you are reading this you are under the house.\n\nThe rusty key is somewhere in this cellar. Search the crates. The ritual door (Door 8) sticks. Do not wake her in there.');ammoInt(60.5,.2,18.4,5);
@@ -1961,7 +2045,7 @@ return{g,B,head,bkE,hairs:[],hair,legs,over,dr0,ov0,ph:0,st:0,stT:3,arms,dress,l
 /* ================= GAME STATE ================= */
 const K={};let RITD=null,hallR=0,hallK=0,shake=0,tn=0,mfT=0,hbT=0,gsT=0,gbT=0,gwT=0,sparkT=20,stepD=0,boT=0,pw=1,lastFilt='',strobe=1;
 const gh={st:'dormant',x:0,z:0,hp:100,t:0,path:[],pk:-1,seen:[0,0],lose:0,atk:0,face:0,vis:false,lvl:0,aggr:1,pause:0,tg:null,rel:0,stk:0,sx:0,sz:0,mvg:false,spd:0,d:99,after:'',ls:false};
-function reset(){chaseMusStop();cineReset();lpReset();KU.on=false;KU.fn=null;heldKey=null;if(KEYH)KEYH.visible=false;hallR=0;hallK=0;P={x:-6,z:-1,y:1.65,yaw:-PI/2,pitch:0,vx:0,vz:0,hp:100,st:100,cr:false,spr:false,lvl:0,noise:0,bob:0,fc:0,rl:0,rc:0,dead:0,cb:null,hid:null,hs:'',ht:0,hd:false,br:100,hold:false,sr:0,hm:0,hh:0,dg:0};$('js').className='';$('hide').className='';JS.on=false;
+function reset(){setGunKind(R()<.5?'deagle':'glock');chaseMusStop();cineReset();lpReset();KU.on=false;KU.fn=null;heldKey=null;if(KEYH)KEYH.visible=false;hallR=0;hallK=0;P={x:-6,z:-1,y:1.65,yaw:-PI/2,pitch:0,vx:0,vz:0,hp:100,st:100,cr:false,spr:false,lvl:0,noise:0,bob:0,fc:0,rl:0,rc:0,dead:0,cb:null,hid:null,hs:'',ht:0,hd:false,br:100,hold:false,sr:0,hm:0,hh:0,dg:0};$('js').className='';$('hide').className='';JS.on=false;
 inv={keys:new Set(),notes:[],gun:false,mag:0,res:0,band:0,hammer:false,shovel:false,rel:new Set()};G={st:'play',power:false,ev:{brass:0,cellar:0,sto:0,pow:0,exit:0,door:0},hnt:70,dt:0,rj:40+R()*20,lrj:'',yard:false,fyard:false,gard:false,gateOpen:false,wk:200,cs:0,t0:performance.now()};
 Object.assign(gh,{st:'dormant',hp:100,aggr:1,path:[],tg:null,vis:false,lvl:0,pause:0,lose:0,atk:0,after:'',cool:0,cht:0});fl.on=false;fl.own=false;spot.intensity=0;gun.visible=false;HAM.visible=false;SHV.visible=false;held=null;shake=0;tn=0;boT=0;
 build();scReset();obj('You wake in the dark. The front door is chained and bolted. Find a way out.');$('fade').style.opacity=0;$('fade').style.transition='none';setTimeout(()=>$('fade').style.transition='opacity 2s',50)}
@@ -2063,7 +2147,7 @@ function escape(){G.st='won';$('fade').style.background='#fff';$('fade').style.o
 /* ================= WEAPON ================= */
 const rc=new T.Raycaster();
 function fire(){if(!inv.gun||held!=='gun'||P.sr>0||P.hm>0||P.dg>0||P.rl>0||P.fc>0||P.cb||P.hid||JS.on||SCX.on)return;if(inv.mag<=0){A.dry();msg('Empty. Press R to reload.',1500);return}
-inv.mag--;P.fc=.18;A.shot();P.rc=1;shake+=.12;mfT=.06;mf.visible=true;mf.rotation.z=R()*6;mf.scale.setScalar(.8+R()*.6);mfl.intensity=3;eject();muzzleFx();noiseEv(38);
+inv.mag--;P.fc=.18;A.shot();if(GUNKIND==='deagle')try{A.boom(.45)}catch(e){}P.rc=1;shake+=.12;mfT=.06;mf.visible=true;mf.rotation.z=R()*6;mf.scale.setScalar(.8+R()*.6);mfl.intensity=3;eject();muzzleFx();noiseEv(38);
 {const k=(.035+R()*.012)*(1-ADSk*.3);P.pitch=cl(P.pitch+k,-1.4,1.4);P.yaw+=(R()-.5)*.012;P.kick=(P.kick||0)+k}
 const o=cam.position.clone(),d=new T.Vector3();cam.getWorldDirection(d);
 {const mvs=Math.hypot(P.vx||0,P.vz||0),sp=(.004+Math.min(mvs,5.2)*.0035+(P.spr?.012:0)+(P.bl||0))*(P.cr?.6:1)*(1-ADSk*.6);P.bl=Math.min(.03,(P.bl||0)+.008);const aa=R()*6.283,rr=Math.sqrt(R())*sp,rt=new T.Vector3().setFromMatrixColumn(cam.matrixWorld,0),up=new T.Vector3().setFromMatrixColumn(cam.matrixWorld,1);d.addScaledVector(rt,Math.cos(aa)*rr).addScaledVector(up,Math.sin(aa)*rr).normalize()}
@@ -2152,7 +2236,7 @@ if(e.code==='KeyH'&&G.st==='play'){useBand();return}
 if(G.st==='inv'&&(e.code==='Tab'||e.code==='Escape'||e.code==='KeyI')){closeInv();return}
 if(G.st==='keypad'){kpKey(e);return}
 if(G.st==='read'&&(e.code==='KeyE'||e.code==='Escape')){$('read').classList.remove('on');G.st='play';lock();return}
-if(G.st!=='play')return;if(e.code==='KeyJ'&&TEST_MODE)lsTest();if(e.code==='KeyK'&&TEST_MODE)ccTest();if(e.code==='KeyE')interact();if(e.code==='KeyF'&&fl.own&&!P.hid){fl.on=!fl.on;A.click();if(fl.on)lightScareMaybe()}if(e.code==='KeyR')reload();if(e.code==='Digit1')setHeld('gun');if(e.code==='Digit2')setHeld('hammer');if(e.code==='Digit3')setHeld('shovel');if(e.code==='KeyQ')swapHeld();if(e.code==='Tab')openInv();if(e.code==='KeyC')P.cr=!P.cr});
+if(G.st!=='play')return;if(e.code==='KeyJ'&&TEST_MODE)lsTest();if(e.code==='KeyK'&&TEST_MODE)ccTest();if(e.code==='KeyU'&&TEST_MODE){setGunKind(GUNKIND==='deagle'?'glock':'deagle');msg('Gun: '+GUNKIND,2000)}if(e.code==='KeyE')interact();if(e.code==='KeyF'&&fl.own&&!P.hid){fl.on=!fl.on;A.click();if(fl.on)lightScareMaybe()}if(e.code==='KeyR')reload();if(e.code==='Digit1')setHeld('gun');if(e.code==='Digit2')setHeld('hammer');if(e.code==='Digit3')setHeld('shovel');if(e.code==='KeyQ')swapHeld();if(e.code==='Tab')openInv();if(e.code==='KeyC')P.cr=!P.cr});
 addEventListener('keyup',e=>K[e.code]=0);
 /* mouse-look filter: browsers sometimes report one huge bogus movementX/Y (pointer-lock re-centre, focus change, lag spike) which spun the camera. Drop those, and ignore input briefly after lock/focus changes. */
 let mIgn=0;const mHold=()=>{mIgn=performance.now()+150};document.addEventListener('pointerlockchange',mHold);addEventListener('focus',mHold);addEventListener('blur',mHold);document.addEventListener('visibilitychange',mHold);
@@ -3114,7 +3198,7 @@ A.libS=function(T_){if(!this.c)return;const c=this.c,t=c.currentTime,ws=this.ws_
 const TEST_MODE=false;
 function giveAll(){fl.own=true;for(const k of['brass','silver','cellar','rusty','exit','fuse','locker','gate'])inv.keys.add(k);
  inv.gun=true;inv.mag=6;inv.res=60;inv.band=9;inv.hammer=true;inv.shovel=true;for(const r of['locket','photo','ring','music','veil'])inv.rel.add(r);
- try{setHeld('gun')}catch(e){}msg('TEST BUILD: every item granted. J = library shadow event, K = ceiling crawler.',6000)}
+ try{setHeld('gun')}catch(e){}msg('TEST BUILD: every item granted. J = library shadow, K = ceiling crawler, U = swap Glock/Desert Eagle.',6000)}
 function lsTest(){lsReset();const d=lsDoor();if(d){d.open=false;d.cl.on=true;d.a=0}P.lvl=0;P.x=0;P.z=19.5;P.yaw=0;P.pitch=0;changeLvl();lsStart(false)}
 
 /* ================= SHARED JUMPSCARE SCREAM (both monsters) ================= */
